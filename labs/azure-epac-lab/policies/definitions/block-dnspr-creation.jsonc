@@ -1,0 +1,64 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/enterprise-azure-policy-as-code/main/Schemas/policy-definition-schema.json",
+  "name": "block-dns-private-resolver-creation",
+  "properties": {
+    "displayName": "Restrict DNS Private Resolver Creation",
+    "description": "Ensures compliance by preventing unauthorized creation of Microsoft.Network/dnsResolvers resources. This control aligns with NIST AC-3 (Access Enforcement) and reduces attack surface exposure in Azure networking.",
+    "mode": "All",
+    "metadata": {
+      "category": "Networking",
+      "version": "1.1.0",
+      "severity": "High",
+      "source": "Frances Saunders Portfolio",
+      "compliance": {
+        "frameworks": [
+          "NIST SP 800-53",
+          "ISO 27001",
+          "FedRAMP Moderate"
+        ]
+      }
+    },
+    "parameters": {
+      "effect": {
+        "type": "String",
+        "metadata": {
+          "description": "Select the effect to enforce for DNS Private Resolver creation attempts.",
+          "displayName": "Effect"
+        },
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Deny"
+      },
+      "excludedResourceGroups": {
+        "type": "Array",
+        "metadata": {
+          "description": "Optional: Resource groups exempted from this policy.",
+          "displayName": "Excluded Resource Groups"
+        },
+        "defaultValue": []
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Network/dnsResolvers"
+          },
+          {
+            "not": {
+              "field": "resourceGroup",
+              "in": "[parameters('excludedResourceGroups')]"
+            }
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    }
+  }
+}
