@@ -1,0 +1,62 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/enterprise-azure-policy-as-code/main/Schemas/policy-definition-schema.json",
+  "name": "restrict-public-ip-assignment",
+  "properties": {
+    "displayName": "Restrict Public IP Assignment",
+    "description": "Prevents unauthorized creation of network interfaces and virtual machines with public IP addresses. Aligns with NIST SC-7 (Boundary Protection) and ISO 27001 A.13 (Network Security) by reducing external attack surface.",
+    "mode": "All",
+    "metadata": {
+      "category": "Networking",
+      "version": "1.0.0",
+      "severity": "High",
+      "source": "Frances Saunders Portfolio",
+      "compliance": {
+        "frameworks": [
+          "NIST SP 800-53",
+          "ISO 27001",
+          "CIS Azure Benchmark"
+        ]
+      }
+    },
+    "parameters": {
+      "effect": {
+        "type": "String",
+        "metadata": {
+          "description": "Select the effect to enforce when public IPs are detected.",
+          "displayName": "Effect"
+        },
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Deny"
+      },
+      "excludedResourceGroups": {
+        "type": "Array",
+        "metadata": {
+          "description": "Optional: Resource groups exempted from this policy (e.g., jump boxes or bastion hosts).",
+          "displayName": "Excluded Resource Groups"
+        },
+        "defaultValue": []
+      }
+    },
+    "policyRule": {
+      "if": {
+        "anyOf": [
+          {
+            "field": "Microsoft.Network/networkInterfaces/ipconfigurations[*].publicIpAddress.id",
+            "exists": "true"
+          },
+          {
+            "field": "Microsoft.Compute/virtualMachines/networkProfile.networkInterfaces[*].id",
+            "like": "*/publicIPAddresses/*"
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    }
+  }
+}
