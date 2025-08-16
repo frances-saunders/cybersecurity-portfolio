@@ -1,0 +1,57 @@
+{
+  // Schema reference for Azure Policy assignment (EPAC-compatible)
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/policyAssignment.json#",
+
+  // Unique name for the assignment
+  "name": "networkControlAssignment",
+
+  "type": "Microsoft.Authorization/policyAssignments",
+  "properties": {
+    // Display name for visibility in the Azure portal
+    "displayName": "Enforce Network Control Initiative",
+    
+    // Description ties business context to the assignment
+    "description": "Assignment of the Networking Control Initiative at the subscription scope. Ensures DNS, Public IP, and Virtual Network controls are enforced to reduce attack surface and align with enterprise compliance frameworks.",
+
+    "metadata": {
+      "version": "1.0.0",
+      "category": "Networking",
+      "source": "Frances Saunders Portfolio",
+      "compliance": {
+        "frameworks": [
+          "NIST SP 800-53",
+          "ISO 27001",
+          "CIS Azure Benchmark"
+        ]
+      }
+    },
+
+    // Scope where this initiative is applied (example: subscription level)
+    "scope": "/subscriptions/<your-subscription-id>",
+
+    // Initiative reference
+    "policyDefinitionId": "/providers/Microsoft.Authorization/policySetDefinitions/networkControlPolicySet",
+
+    "parameters": {
+      // Bind initiative parameters to specific effects for this assignment
+      "dnsprEffect": {
+        "value": "Deny"
+      },
+      "privateDNSEffect": {
+        "value": "Deny"
+      },
+      "vnmEffect": {
+        "value": "Audit" // Example: allow testing before enforcement
+      },
+      "pipVMEffect": {
+        "value": "Deny"
+      }
+    },
+
+    // Optional scope exclusions
+    "notScopes": [
+      "/subscriptions/<your-subscription-id>/resourceGroups/JumpHosts",
+      "/subscriptions/<your-subscription-id>/resourceGroups/BastionRG"
+    ]
+  }
+}
