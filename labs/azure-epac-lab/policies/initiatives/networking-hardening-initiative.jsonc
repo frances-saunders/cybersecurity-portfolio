@@ -1,46 +1,76 @@
 {
-  // Initiative schema for Azure EPAC
+  // Schema reference for Azure EPAC-compatible policy set (initiative)
   "$schema": "https://raw.githubusercontent.com/Azure/enterprise-azure-policy-as-code/main/Schemas/policy-set-definition-schema.json",
-  
+
+  // Unique internal name for the initiative
   "name": "networkControlPolicySet",
   "type": "Microsoft.Authorization/policySetDefinitions",
+
   "properties": {
     "displayName": "Network Control Initiative",
-    "description": "Restricts high-risk networking resources to reduce attack surface.",
-    
+    // Business-facing description ties to security frameworks
+    "description": "Bundled networking security controls to restrict high-risk resource types and enforce secure design principles. Aligns with NIST SP 800-53 SC-7 (Boundary Protection), ISO 27001 A.13 (Network Security), and CIS Azure Benchmark.",
+
     "metadata": {
       "version": "1.1.0",
       "category": "Networking",
-      // Aligns with key compliance frameworks for credibility
+      "severity": "High",
+      "source": "Frances Saunders Portfolio",
       "compliance": {
+        // Explicitly mapped to major frameworks for credibility
         "frameworks": [
-          "NIST SP 800-53 SC-7",
-          "ISO 27001 A.13",
-          "CIS Azure Benchmark"
+          "NIST SP 800-53",
+          "ISO 27001",
+          "CIS Azure Foundations Benchmark"
         ]
       }
     },
-    
+
     "parameters": {
-      // Controls DNS Private Resolver creation
+      // Centralized initiative-level parameters so effects can be tuned easily
       "dnsprEffect": {
         "type": "String",
         "allowedValues": [ "Audit", "Deny", "Disabled" ],
-        "defaultValue": "Deny"
+        "defaultValue": "Deny",
+        "metadata": {
+          "description": "Enforce restrictions on DNS Private Resolver creation.",
+          "displayName": "DNS Private Resolver Effect"
+        }
+      },
+      "privateDNSEffect": {
+        "type": "String",
+        "allowedValues": [ "Audit", "Deny", "Disabled" ],
+        "defaultValue": "Deny",
+        "metadata": {
+          "description": "Enforce restrictions on Private DNS Zone creation.",
+          "displayName": "Private DNS Zone Effect"
+        }
+      },
+      "vnmEffect": {
+        "type": "String",
+        "allowedValues": [ "Audit", "Deny", "Disabled" ],
+        "defaultValue": "Deny",
+        "metadata": {
+          "description": "Restrict creation of Azure Virtual Network Manager.",
+          "displayName": "Virtual Network Manager Effect"
+        }
+      },
+      "pipVMEffect": {
+        "type": "String",
+        "allowedValues": [ "Audit", "Deny", "Disabled" ],
+        "defaultValue": "Deny",
+        "metadata": {
+          "description": "Restrict assignment of Public IP addresses to Virtual Machines.",
+          "displayName": "Public IP on VM Effect"
+        }
       }
     },
-    
+
     "policyDefinitions": [
       {
+        // Reference to DNSPR definition
         "policyDefinitionReferenceId": "block-dnspr-creation",
         "policyDefinitionName": "block-dnspr-creation",
         "parameters": {
           "effect": {
-            // Links parameterized effect to initiative-level input
-            "value": "[parameters('dnsprEffect')]"
-          }
-        }
-      }
-    ]
-  }
-}
+            // Binds the in
