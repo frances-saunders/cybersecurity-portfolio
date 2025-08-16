@@ -73,4 +73,41 @@
         "policyDefinitionName": "block-dnspr-creation",
         "parameters": {
           "effect": {
-            // Binds the in
+            // Binds the initiative-level parameter to the policy definition
+            "value": "[parameters('dnsprEffect')]"
+          }
+        }
+      },
+      {
+        // Reference to Private DNS Zone definition
+        "policyDefinitionReferenceId": "block-private-dns-zone-creation",
+        "policyDefinitionName": "block-private-dns-zone-creation",
+        "parameters": {
+          "effect": {
+            "value": "[parameters('privateDNSEffect')]"
+          }
+        }
+      },
+      {
+        // Reference to Virtual Network Manager definition
+        "policyDefinitionReferenceId": "block-vnm-creation",
+        "policyDefinitionName": "block-vnm-creation",
+        "parameters": {
+          "effect": {
+            "value": "[parameters('vnmEffect')]"
+          }
+        }
+      },
+      {
+        // Reference to Public IP assignment restriction
+        "policyDefinitionReferenceId": "block-pip-vm-creation",
+        "policyDefinitionName": "block-pip-vm-creation",
+        "parameters": {
+          "effect": {
+            "value": "[parameters('pipVMEffect')]"
+          }
+        }
+      }
+    ]
+  }
+}
