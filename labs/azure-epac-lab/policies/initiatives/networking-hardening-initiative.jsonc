@@ -1,0 +1,46 @@
+{
+  // Initiative schema for Azure EPAC
+  "$schema": "https://raw.githubusercontent.com/Azure/enterprise-azure-policy-as-code/main/Schemas/policy-set-definition-schema.json",
+  
+  "name": "networkControlPolicySet",
+  "type": "Microsoft.Authorization/policySetDefinitions",
+  "properties": {
+    "displayName": "Network Control Initiative",
+    "description": "Restricts high-risk networking resources to reduce attack surface.",
+    
+    "metadata": {
+      "version": "1.1.0",
+      "category": "Networking",
+      // Aligns with key compliance frameworks for credibility
+      "compliance": {
+        "frameworks": [
+          "NIST SP 800-53 SC-7",
+          "ISO 27001 A.13",
+          "CIS Azure Benchmark"
+        ]
+      }
+    },
+    
+    "parameters": {
+      // Controls DNS Private Resolver creation
+      "dnsprEffect": {
+        "type": "String",
+        "allowedValues": [ "Audit", "Deny", "Disabled" ],
+        "defaultValue": "Deny"
+      }
+    },
+    
+    "policyDefinitions": [
+      {
+        "policyDefinitionReferenceId": "block-dnspr-creation",
+        "policyDefinitionName": "block-dnspr-creation",
+        "parameters": {
+          "effect": {
+            // Links parameterized effect to initiative-level input
+            "value": "[parameters('dnsprEffect')]"
+          }
+        }
+      }
+    ]
+  }
+}
