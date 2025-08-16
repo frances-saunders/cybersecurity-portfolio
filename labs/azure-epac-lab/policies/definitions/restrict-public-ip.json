@@ -1,10 +1,17 @@
 {
+  // Schema reference for Azure EPAC-compatible policy definitions
   "$schema": "https://raw.githubusercontent.com/Azure/enterprise-azure-policy-as-code/main/Schemas/policy-definition-schema.json",
+
+  // Unique internal name for the policy
   "name": "restrict-public-ip-assignment",
+
   "properties": {
     "displayName": "Restrict Public IP Assignment",
+    // Framed in terms of compliance and risk
     "description": "Prevents unauthorized creation of network interfaces and virtual machines with public IP addresses. Aligns with NIST SC-7 (Boundary Protection) and ISO 27001 A.13 (Network Security) by reducing external attack surface.",
+
     "mode": "All",
+
     "metadata": {
       "category": "Networking",
       "version": "1.0.0",
@@ -18,20 +25,20 @@
         ]
       }
     },
+
     "parameters": {
+      // Parameterized effect ensures this is reusable across environments
       "effect": {
         "type": "String",
         "metadata": {
           "description": "Select the effect to enforce when public IPs are detected.",
           "displayName": "Effect"
         },
-        "allowedValues": [
-          "Audit",
-          "Deny",
-          "Disabled"
-        ],
+        "allowedValues": [ "Audit", "Deny", "Disabled" ],
         "defaultValue": "Deny"
       },
+
+      // Allow enterprises to carve out controlled exceptions
       "excludedResourceGroups": {
         "type": "Array",
         "metadata": {
@@ -41,19 +48,23 @@
         "defaultValue": []
       }
     },
+
     "policyRule": {
       "if": {
         "anyOf": [
           {
+            // Detect NICs with public IP addresses
             "field": "Microsoft.Network/networkInterfaces/ipconfigurations[*].publicIpAddress.id",
             "exists": "true"
           },
           {
+            // Detect VMs referencing public IPs
             "field": "Microsoft.Compute/virtualMachines/networkProfile.networkInterfaces[*].id",
             "like": "*/publicIPAddresses/*"
           }
         ]
       },
+      // Apply chosen effect (default: Deny)
       "then": {
         "effect": "[parameters('effect')]"
       }
