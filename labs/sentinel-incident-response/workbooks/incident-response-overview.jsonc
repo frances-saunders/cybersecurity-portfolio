@@ -1,0 +1,70 @@
+{
+  // -------------------------------
+  // Azure Sentinel Workbook Template
+  // Incident Response Automation Overview
+  // -------------------------------
+
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json",
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      // Title for the Workbook
+      "type": 9,
+      "content": {
+        "json": "## Incident Response Automation Overview"
+      }
+    },
+    {
+      // Incidents by Severity (Pie Chart)
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityIncident | summarize count() by Severity",
+        "size": 3,
+        "chart": {
+          "type": "pie"
+        },
+        "title": "Incident Volume by Severity"
+      }
+    },
+    {
+      // Auto-Closed False Positives
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityIncident | where Classification == 'FalsePositive' | summarize count()",
+        "size": 3,
+        "chart": {
+          "type": "tiles"
+        },
+        "title": "Auto-Closed False Positives"
+      }
+    },
+    {
+      // Threat Intelligence Enrichment Coverage
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityIncident | where isnotempty(Comments) and Comments has 'Threat Intel Enrichment' | summarize EnrichedCount = count(), Total = count(SecurityIncidentId) by bin(TimeGenerated, 1d) | extend CoveragePct = todouble(EnrichedCount) / todouble(Total) * 100",
+        "size": 3,
+        "chart": {
+          "type": "line"
+        },
+        "title": "Threat Intel Enrichment Coverage (%)"
+      }
+    },
+    {
+      // Time to Close: Automated vs Manual
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityIncident | extend duration = datetime_diff('minute', ClosedTime, CreatedTime) | summarize avgDuration = avg(duration) by iif(Comments has 'Auto-Closed' or Comments has 'Threat Intel Enrichment', 'Automated', 'Manual')",
+        "size": 3,
+        "chart": {
+          "type": "column"
+        },
+        "title": "Mean Time to Close (MTTC) – Automated vs Manual"
+      }
+    }
+  ]
+}
