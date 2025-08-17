@@ -1,0 +1,9 @@
+// defender-alerts.kql
+// Correlates Microsoft Defender for Endpoint alerts with Azure AD sign-ins
+SecurityAlert
+| where ProviderName == "MDATP"
+| join kind=inner (
+    SigninLogs
+    | project AadUserId = tostring(UserId), UserPrincipalName, IPAddress, TimeGenerated
+) on $left.AccountCustomEntity == $right.UserPrincipalName
+| project AlertName, Severity, UserPrincipalName, IPAddress, TimeGenerated
