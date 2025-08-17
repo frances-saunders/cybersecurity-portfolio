@@ -1,0 +1,51 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/enterprise-azure-policy-as-code/main/Schemas/policy-definition-schema.json",
+  "name": "require-tags",
+  "properties": {
+    "displayName": "Require Tags on Resources",
+    "description": "Ensures that resources include specific tags for governance and cost management.",
+    "mode": "All",
+    "metadata": {
+      "category": "General",
+      "version": "1.0.0"
+    },
+    "parameters": {
+      "requiredTags": {
+        "type": "Array",
+        "metadata": {
+          "description": "The list of tag keys that must be present on all resources.",
+          "displayName": "Required Tags"
+        }
+      },
+      "effect": {
+        "type": "String",
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Deny",
+        "metadata": {
+          "description": "The effect if required tags are missing.",
+          "displayName": "Effect"
+        }
+      }
+    },
+    "policyRule": {
+      "if": {
+        "not": {
+          "allOf": [
+            {
+              "field": "[concat('tags[', parameters('requiredTags')[0], ']')]",
+              "exists": "true"
+            }
+            // Additional required tags can be enforced by extending this block
+          ]
+        }
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    }
+  }
+}
