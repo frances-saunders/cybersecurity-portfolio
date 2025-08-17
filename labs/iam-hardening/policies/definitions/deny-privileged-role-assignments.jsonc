@@ -1,0 +1,29 @@
+{
+  "properties": {
+    "displayName": "Deny assignment of high-privilege roles",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "Restrict assignments of Owner and User Access Administrator roles to prevent privilege escalation.",
+    "metadata": {
+      "category": "Identity",
+      "version": "1.0.0"
+    },
+    "parameters": {},
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "Microsoft.Authorization/roleAssignments/roleDefinitionId",
+            "in": [
+              "/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635", // Owner
+              "/providers/Microsoft.Authorization/roleDefinitions/fd9c90a3-2b07-4f0e-a2f0-ec8b54b01b6c"  // User Access Administrator
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
