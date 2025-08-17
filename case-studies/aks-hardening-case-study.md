@@ -16,7 +16,7 @@ The challenge was to design and implement a security baseline that enforced **ne
 
 ## Role & Tools
 
-**Role:** Cloud Admin / Security Lead (solo project)
+**Role:** Cloud Admin / Security Lead (solo project)  
 **Tools & Technologies:** Azure Policy, Kubernetes RBAC & Network Policies, Terraform, kubectl
 
 ---
