@@ -16,7 +16,7 @@ The challenge was to design and implement a **governance baseline** that enforce
 
 ## Role & Tools
 
-**Role:** Cloud Admin / Security Lead (solo project)
+**Role:** Cloud Admin / Security Lead (solo project)  
 **Tools & Technologies:** Azure Policy, Terraform, Azure CLI, Microsoft Defender for Cloud
 
 ---
