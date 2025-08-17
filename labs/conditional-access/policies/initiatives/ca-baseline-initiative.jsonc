@@ -1,0 +1,115 @@
+{
+  // Initiative schema for bundling Conditional Access policies
+  "$schema": "https://schema.management.azure.com/schemas/2019-09-01/policyDefinitionSet.json#",
+
+  // Unique internal name for the initiative
+  "name": "ca-baseline-initiative",
+  "type": "Microsoft.Authorization/policySetDefinitions",
+
+  "properties": {
+    "displayName": "Conditional Access Baseline Initiative",
+    "description": "Groups baseline Conditional Access policies enforcing MFA, blocking legacy auth, restricting access by location, and ensuring compliant devices for administrators.",
+
+    "metadata": {
+      "version": "1.0.0",
+      "category": "Identity & Access Management",
+      "severity": "High",
+      "source": "Frances Saunders Portfolio",
+      "compliance": {
+        "frameworks": [
+          "NIST SP 800-53",
+          "ISO 27001",
+          "CIS Microsoft 365 Foundations"
+        ]
+      }
+    },
+
+    // Parameters allow flexible enforcement across environments
+    "parameters": {
+      "mfaEffect": {
+        "type": "String",
+        "allowedValues": ["Audit", "Enforce", "Disabled"],
+        "defaultValue": "Enforce",
+        "metadata": {
+          "displayName": "MFA Enforcement Effect",
+          "description": "Control whether MFA for all users is enforced or audited."
+        }
+      },
+      "compliantDeviceEffect": {
+        "type": "String",
+        "allowedValues": ["Audit", "Enforce", "Disabled"],
+        "defaultValue": "Enforce",
+        "metadata": {
+          "displayName": "Compliant Device Effect",
+          "description": "Control enforcement of compliant device requirements for admins."
+        }
+      },
+      "blockLegacyEffect": {
+        "type": "String",
+        "allowedValues": ["Audit", "Enforce", "Disabled"],
+        "defaultValue": "Enforce",
+        "metadata": {
+          "displayName": "Block Legacy Authentication Effect",
+          "description": "Control enforcement of blocking legacy authentication protocols."
+        }
+      },
+      "locationEffect": {
+        "type": "String",
+        "allowedValues": ["Audit", "Enforce", "Disabled"],
+        "defaultValue": "Enforce",
+        "metadata": {
+          "displayName": "Location Restriction Effect",
+          "description": "Control enforcement of location-based restrictions."
+        }
+      },
+      "portalMfaEffect": {
+        "type": "String",
+        "allowedValues": ["Audit", "Enforce", "Disabled"],
+        "defaultValue": "Enforce",
+        "metadata": {
+          "displayName": "Admin Portal MFA Effect",
+          "description": "Control enforcement of MFA for portal access."
+        }
+      }
+    },
+
+    // List of policy definitions included in the initiative
+    "policyDefinitions": [
+      {
+        "policyDefinitionReferenceId": "ca-require-mfa-all",
+        "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/ca-require-mfa-all",
+        "parameters": {
+          "effect": { "value": "[parameters('mfaEffect')]" }
+        }
+      },
+      {
+        "policyDefinitionReferenceId": "ca-require-compliant-device-admins",
+        "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/ca-require-compliant-device-admins",
+        "parameters": {
+          "effect": { "value": "[parameters('compliantDeviceEffect')]" }
+        }
+      },
+      {
+        "policyDefinitionReferenceId": "ca-block-legacy-auth",
+        "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/ca-block-legacy-auth",
+        "parameters": {
+          "effect": { "value": "[parameters('blockLegacyEffect')]" }
+        }
+      },
+      {
+        "policyDefinitionReferenceId": "ca-restrict-by-location",
+        "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/ca-restrict-by-location",
+        "parameters": {
+          "effect": { "value": "[parameters('locationEffect')]" }
+        }
+      },
+      {
+        "policyDefinitionReferenceId": "ca-require-mfa-portal",
+        "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/ca-require-mfa-portal",
+        "parameters": {
+          "effect": { "value": "[parameters('portalMfaEffect')]" }
+        }
+      }
+    ]
+  }
+}
