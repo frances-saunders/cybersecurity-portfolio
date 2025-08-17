@@ -1,0 +1,79 @@
+{
+  // Azure Monitor Workbook schema
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json",
+
+  "version": "Notebook/1.0",
+  "items": [
+
+    // Section 1: Title
+    {
+      "type": 1,
+      "content": "# AKS Security Monitoring Workbook",
+      "name": "text - title"
+    },
+
+    // Section 2: AKS Privileged Container Attempts
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "AzureDiagnostics | where Category == 'kube-audit' | where log_s contains 'privileged' or log_s contains 'cluster-admin' | extend PodName = tostring(parse_json(log_s).objectRef.name) | extend Namespace = tostring(parse_json(log_s).objectRef.namespace) | project TimeGenerated, PodName, Namespace, log_s | order by TimeGenerated desc",
+        "size": 1,
+        "title": "Privileged Container Attempts in AKS",
+        "chart": {
+          "type": "table"
+        }
+      },
+      "name": "aks-privileged-containers"
+    },
+
+    // Section 3: Policy Non-Compliance
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "PolicyResources | where ComplianceState == 'NonCompliant' | project TimeGenerated, PolicyAssignmentName, PolicyDefinitionName, ResourceId, ComplianceState | order by TimeGenerated desc",
+        "size": 1,
+        "title": "Azure Policy Non-Compliance",
+        "chart": {
+          "type": "table"
+        }
+      },
+      "name": "policy-noncompliance"
+    },
+
+    // Section 4: Defender Alerts
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityAlert | where ProviderName == 'ASC' | where ResourceId contains 'Microsoft.ContainerService/managedClusters' | where Severity in ('High','Medium') | project TimeGenerated, AlertName, Severity, ResourceId, CompromisedEntity, Tactics, Description | order by TimeGenerated desc",
+        "size": 1,
+        "title": "Defender for Cloud Alerts (AKS)",
+        "chart": {
+          "type": "table"
+        }
+      },
+      "name": "defender-alerts"
+    },
+
+    // Section 5: Sign-In Anomalies
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SigninLogs | where ResultType != 0 | summarize FailedAttempts = count() by UserPrincipalName, IPAddress, bin(TimeGenerated, 1h) | where FailedAttempts > 5 | order by FailedAttempts desc",
+        "size": 1,
+        "title": "Repeated Failed Sign-Ins",
+        "chart": {
+          "type": "table"
+        }
+      },
+      "name": "signin-anomalies"
+    }
+  ],
+
+  "fallbackResourceIds": [
+    "/subscriptions/<sub_id>/resourceGroups/<rg_name>/providers/Microsoft.OperationalInsights/workspaces/<law_name>"
+  ]
+}
