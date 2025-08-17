@@ -1,0 +1,30 @@
+// Deny workloads created in the default namespace
+{
+  "properties": {
+    "displayName": "AKS - Restrict Default Namespace",
+    "policyType": "Custom",
+    "mode": "Indexed",
+    "description": "Prevents workloads from being deployed in the 'default' namespace to encourage namespace separation.",
+    "metadata": {
+      "category": "Kubernetes",
+      "version": "1.0.0"
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Kubernetes/connectedClusters/pods"
+          },
+          {
+            "field": "Microsoft.Kubernetes/connectedClusters/pods/metadata.namespace",
+            "equals": "default"
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
