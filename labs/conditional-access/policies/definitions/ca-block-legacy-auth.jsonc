@@ -1,0 +1,13 @@
+{
+  // Block legacy authentication protocols (POP, IMAP, SMTP, etc.)
+  "id": "ca-block-legacy-auth",
+  "displayName": "Block Legacy Authentication",
+  "state": "enabled",
+  "conditions": {
+    "clientAppTypes": ["other"] // Legacy protocols
+  },
+  "grantControls": {
+    "operator": "OR",
+    "builtInControls": ["block"]
+  }
+}
