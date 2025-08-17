@@ -1,0 +1,30 @@
+{
+  "properties": {
+    "displayName": "Deny use of accounts inactive for 90 days",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "Prevents role assignments for accounts that have not signed in within 90 days.",
+    "metadata": {
+      "category": "Identity",
+      "version": "1.0.0"
+    },
+    "parameters": {
+      "daysInactive": {
+        "type": "Integer",
+        "defaultValue": 90,
+        "metadata": {
+          "description": "Number of inactive days before blocking assignments."
+        }
+      }
+    },
+    "policyRule": {
+      "if": {
+        "field": "microsoft.authorization/roleassignments/principalSignInActivity.lastSignInDate",
+        "less": "[addDays(utcNow(), -[parameters('daysInactive')])]"
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
