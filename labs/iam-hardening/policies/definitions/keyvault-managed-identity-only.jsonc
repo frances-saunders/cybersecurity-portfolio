@@ -1,0 +1,29 @@
+{
+  "properties": {
+    "displayName": "Enforce Key Vault access via Managed Identity only",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "Ensures Key Vault secrets are only accessed by managed identities, not direct user accounts.",
+    "metadata": {
+      "category": "Identity",
+      "version": "1.0.0"
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.KeyVault/vaults/accessPolicies"
+          },
+          {
+            "field": "Microsoft.KeyVault/vaults/accessPolicies/objectType",
+            "equals": "User"
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
