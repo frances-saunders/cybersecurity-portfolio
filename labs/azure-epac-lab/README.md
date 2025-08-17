@@ -8,6 +8,7 @@ The goal of this lab is to showcase end-to-end governance automation, aligned wi
 ---
 
 ## Lab Structure
+```
 azure-epac-lab/
 │
 ├── policies/
@@ -20,7 +21,7 @@ azure-epac-lab/
 │ │
 │ └── assignments/ # Applied to scope (subscription/resource group)
 │ └── network-control-assignment.json
-
+```
 ## Step 1 – Policy Definitions
 Individual JSON files that enforce specific security rules.  
 Examples in this lab:
