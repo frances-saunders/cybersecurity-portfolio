@@ -1,0 +1,92 @@
+{
+  "properties": {
+    "displayName": "IAM Hardening Initiative",
+    "description": "Enforces identity and access management (IAM) security controls including PIM, guest restrictions, stale account prevention, managed identity governance, Key Vault access restrictions, and IAM logging.",
+    "metadata": {
+      "category": "Identity",
+      "version": "1.0.0",
+      "source": "Custom"
+    },
+    "policyType": "Custom",
+    "parameters": {
+      "allowedDomains": {
+        "type": "Array",
+        "metadata": {
+          "description": "Approved external domains for B2B guest users."
+        }
+      },
+      "daysInactive": {
+        "type": "Integer",
+        "defaultValue": 90,
+        "metadata": {
+          "description": "Number of inactive days before blocking assignments."
+        }
+      },
+      "allowedScopes": {
+        "type": "Array",
+        "metadata": {
+          "description": "Approved scopes for managed identity creation."
+        }
+      },
+      "logAnalyticsWorkspaceId": {
+        "type": "String",
+        "metadata": {
+          "description": "Resource ID of Log Analytics workspace for IAM logging."
+        }
+      }
+    },
+    "policyDefinitions": [
+      {
+        "policyDefinitionReferenceId": "requirePIM",
+        "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/require-pim-for-privileged-roles",
+        "parameters": {}
+      },
+      {
+        "policyDefinitionReferenceId": "denyStaleAccounts",
+        "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/deny-stale-accounts",
+        "parameters": {
+          "daysInactive": {
+            "value": "[parameters('daysInactive')]"
+          }
+        }
+      },
+      {
+        "policyDefinitionReferenceId": "restrictGuests",
+        "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/restrict-guest-users",
+        "parameters": {
+          "allowedDomains": {
+            "value": "[parameters('allowedDomains')]"
+          }
+        }
+      },
+      {
+        "policyDefinitionReferenceId": "requireConditionalAccess",
+        "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/require-conditional-access",
+        "parameters": {}
+      },
+      {
+        "policyDefinitionReferenceId": "restrictManagedIdentities",
+        "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/restrict-managed-identities",
+        "parameters": {
+          "allowedScopes": {
+            "value": "[parameters('allowedScopes')]"
+          }
+        }
+      },
+      {
+        "policyDefinitionReferenceId": "keyVaultMIOnly",
+        "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/keyvault-managed-identity-only",
+        "parameters": {}
+      },
+      {
+        "policyDefinitionReferenceId": "requireIAMLogging",
+        "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/require-iam-logging",
+        "parameters": {
+          "logAnalyticsWorkspaceId": {
+            "value": "[parameters('logAnalyticsWorkspaceId')]"
+          }
+        }
+      }
+    ]
+  }
+}
