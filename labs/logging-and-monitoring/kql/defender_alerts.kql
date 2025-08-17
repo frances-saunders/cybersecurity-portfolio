@@ -1,0 +1,7 @@
+// Lists high-severity Defender for Cloud alerts related to AKS workloads
+SecurityAlert
+| where ProviderName == "ASC"
+| where ResourceId contains "Microsoft.ContainerService/managedClusters"
+| where Severity in ("High", "Medium")
+| project TimeGenerated, AlertName, Severity, ResourceId, CompromisedEntity, Tactics, Description
+| order by TimeGenerated desc
