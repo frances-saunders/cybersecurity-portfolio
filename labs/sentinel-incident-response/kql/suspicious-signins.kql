@@ -1,0 +1,12 @@
+// suspicious-signins.kql
+// Detects sign-ins from unusual countries not typically associated with the tenant
+SigninLogs
+| where ResultType == 0
+| extend Country = tostring(LocationDetails.countryOrRegion)
+| summarize Count = count() by UserPrincipalName, Country, bin(TimeGenerated, 1d)
+| join kind=inner (
+    SigninLogs
+    | summarize KnownCountries = make_set(LocationDetails.countryOrRegion) by UserPrincipalName
+) on UserPrincipalName
+| where Country !in (KnownCountries)
+| project TimeGenerated, UserPrincipalName, Country, Count
