@@ -1,0 +1,26 @@
+{
+  "properties": {
+    "displayName": "Restrict custom role definitions",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "Prevent creation of custom roles with wildcard permissions or overly broad actions.",
+    "metadata": {
+      "category": "Identity",
+      "version": "1.0.0"
+    },
+    "parameters": {},
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "Microsoft.Authorization/roleDefinitions/permissions[*].actions",
+            "contains": "*"
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
