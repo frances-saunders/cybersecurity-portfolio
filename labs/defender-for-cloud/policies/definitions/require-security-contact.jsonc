@@ -1,0 +1,66 @@
+// Azure Policy Definition: Require Security Contact Information
+{
+  "properties": {
+    "displayName": "Require Security Contact Information for Microsoft Defender for Cloud",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "Ensures that Microsoft Defender for Cloud has security contact information configured, including email and phone number.",
+    "metadata": {
+      "category": "Defender for Cloud",
+      "version": "1.0.0"
+    },
+    "parameters": {
+      "securityContactEmail": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Security Contact Email",
+          "description": "The email address to be configured as the security contact."
+        }
+      },
+      "securityContactPhone": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Security Contact Phone",
+          "description": "The phone number to be configured as the security contact."
+        }
+      }
+    },
+    "policyRule": {
+      "if": {
+        "field": "type",
+        "equals": "Microsoft.Resources/subscriptions"
+      },
+      "then": {
+        "effect": "deployIfNotExists",
+        "details": {
+          "type": "Microsoft.Security/securityContacts",
+          "existenceCondition": {
+            "allOf": [
+              {
+                "field": "Microsoft.Security/securityContacts/email",
+                "equals": "[parameters('securityContactEmail')]"
+              },
+              {
+                "field": "Microsoft.Security/securityContacts/phone",
+                "equals": "[parameters('securityContactPhone')]"
+              }
+            ]
+          },
+          "roleDefinitionIds": [
+            "/providers/Microsoft.Authorization/roleDefinitions/fd9d4c06-0a2b-4e1d-bdf9-3b68e0f327f4" // Security Admin
+          ],
+          "deployment": {
+            "properties": {
+              "mode": "incremental",
+              "template": {
+                "$schema": "http://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                "contentVersion": "1.0.0.0",
+                "resources": [
+                  {
+                    "type": "Microsoft.Security/securityContacts",
+                    "apiVersion": "2020-01-01",
+                    "name": "default",
+                    "properties": {
+                      "email": "[parameters('securityContactEmail')]",
+                      "phone": "[parameters('securityContactPhone')]",
+                      "alertNotificatio
