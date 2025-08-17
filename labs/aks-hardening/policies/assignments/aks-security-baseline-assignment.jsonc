@@ -1,40 +1,34 @@
 {
-  // Azure Policy assignment schema
-  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/policyAssignment.json#",
+  // Schema for Policy Assignment (applies an initiative/definition to a specific scope)
+  "$schema": "https://schema.management.azure.com/schemas/2019-09-01/policyAssignment.json#",
 
-  // Unique name for the assignment
-  "name": "aksSecurityBaselineAssignment",
-
+  // Unique internal name for this assignment
+  "name": "aks-security-baseline-assignment",
   "type": "Microsoft.Authorization/policyAssignments",
+
   "properties": {
-    // Friendly display name as it appears in the Azure Portal
-    "displayName": "AKS Security Baseline – Enforce Initiative",
+    // Human-readable display name
+    "displayName": "AKS Security Baseline Assignment",
 
-    // Business context for reviewers and auditors
-    "description": "Assigns the AKS Security Baseline Initiative at subscription scope to enforce privileged container restrictions, approved registries, and Kubernetes NetworkPolicy.",
+    // Description clarifies business/security rationale
+    "description": "Assigns the AKS Security Baseline Initiative to enforce Kubernetes best practices across workloads. Ensures workloads adhere to enterprise security, compliance, and zero-trust requirements.",
 
-    "metadata": {
-      "version": "1.0.0",
-      "category": "Kubernetes",
-      "source": "Frances Saunders Portfolio"
-    },
+    // Target scope — customize as needed (subscription, resource group, or management group)
+    "scope": "/subscriptions/<your-subscription-id>/resourceGroups/<aks-resource-group>",
 
-    // Subscription-level scope for portfolio demonstration.
-    // Replace <your-subscription-id> with a non-sensitive demo GUID if you commit this publicly.
-    "scope": "/subscriptions/<your-subscription-id>",
+    "enforcementMode": "Default",
 
-    // Reference the initiative definition created in: policies/initiatives/aks-security-baseline-initiative.jsonc
-    "policyDefinitionId": "/providers/Microsoft.Authorization/policySetDefinitions/aks-security-baseline-initiative",
-
-    // Bind initiative-level parameters to concrete values for this assignment
+    // Parameters passed down to the initiative
     "parameters": {
-      // Block privileged containers in all clusters
-      "privilegedEffect": { "value": "Deny" },
+      // Privileged containers should be outright denied
+      "privilegedEffect": {
+        "value": "Deny"
+      },
 
-      // Enforce approved image provenance and block the rest
-      "registryEffect": { "value": "Deny" },
-
-      // Example allowlist (adjust to your demo registries)
+      // Only approved registries should be allowed (ACR and official Microsoft images as example)
+      "registryEffect": {
+        "value": "Deny"
+      },
       "approvedRegistries": {
         "value": [
           "mycompany.azurecr.io",
@@ -42,13 +36,37 @@
         ]
       },
 
-      // Stage NetworkPolicy enforcement: start in Audit, move to Deny later
-      "netpolEffect": { "value": "Audit" }
+      // Enforce Kubernetes network policies in namespaces
+      "netpolEffect": {
+        "value": "Audit"
+      },
+
+      // Require CPU/Memory requests and limits on pods
+      "resourceLimitEffect": {
+        "value": "Audit"
+      },
+
+      // Restrict workloads from being deployed into the default namespace
+      "namespaceEffect": {
+        "value": "Deny"
+      },
+
+      // Enforce Key Vault–backed secret usage
+      "keyVaultEffect": {
+        "value": "Audit"
+      }
     },
 
-    // Optional: Exclude specific resource groups (e.g., sandboxes, break-glass)
-    "notScopes": [
-      "/subscriptions/<your-subscription-id>/resourceGroups/aks-sandbox-rg"
+    "nonComplianceMessages": [
+      {
+        // Default message shown in Azure portal when workloads are non-compliant
+        "message": "This workload violates the AKS Security Baseline controls. Ensure pods use approved registries, have resource limits, and adhere to namespace and secret governance."
+      }
     ]
+  },
+
+  "identity": {
+    // Managed identity required if policies use remediation tasks (deployIfNotExists / modify)
+    "type": "SystemAssigned"
   }
 }
