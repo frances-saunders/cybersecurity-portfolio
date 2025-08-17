@@ -1,0 +1,43 @@
+{
+  "properties": {
+    "displayName": "Restrict B2B guest users to approved domains",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "Prevents creation of guest users unless their email domain is on the approved list.",
+    "metadata": {
+      "category": "Identity",
+      "version": "1.0.0"
+    },
+    "parameters": {
+      "allowedDomains": {
+        "type": "Array",
+        "metadata": {
+          "description": "List of approved external domains for guest users."
+        }
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.DirectoryServices/Users"
+          },
+          {
+            "field": "Microsoft.DirectoryServices/Users/userType",
+            "equals": "Guest"
+          },
+          {
+            "not": {
+              "field": "Microsoft.DirectoryServices/Users/mail",
+              "like": "[concat('*@', parameters('allowedDomains'))]"
+            }
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
