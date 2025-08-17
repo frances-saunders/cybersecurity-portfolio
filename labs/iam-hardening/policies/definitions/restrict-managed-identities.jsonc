@@ -1,0 +1,29 @@
+{
+  "properties": {
+    "displayName": "Restrict Managed Identity creation to approved scopes",
+    "policyType": "Custom",
+    "mode": "Indexed",
+    "description": "Restricts creation of system and user-assigned managed identities to approved resource groups or subscriptions.",
+    "metadata": {
+      "category": "Identity",
+      "version": "1.0.0"
+    },
+    "parameters": {
+      "allowedScopes": {
+        "type": "Array",
+        "metadata": {
+          "description": "Approved scopes for managed identity creation."
+        }
+      }
+    },
+    "policyRule": {
+      "if": {
+        "field": "type",
+        "equals": "Microsoft.ManagedIdentity/userAssignedIdentities"
+      },
+      "then": {
+        "effect": "[if(contains(parameters('allowedScopes'), field('scope')), 'audit', 'deny')]"
+      }
+    }
+  }
+}
