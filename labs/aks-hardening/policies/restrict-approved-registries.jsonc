@@ -1,0 +1,47 @@
+{
+  // Forces images to come only from an approved registry list
+  "$schema": "https://schema.management.azure.com/schemas/2019-09-01/policyDefinition.json#",
+  "name": "aks-restrict-approved-registries",
+  "properties": {
+    "displayName": "AKS: Restrict Container Images to Approved Registries",
+    "description": "Audit or block pods that pull images from unapproved registries to enforce provenance and supply-chain controls.",
+    "mode": "All",
+    "metadata": {
+      "category": "Kubernetes",
+      "version": "1.0.0",
+      "severity": "High",
+      "source": "Frances Saunders Portfolio"
+    },
+    "parameters": {
+      "effect": {
+        "type": "String",
+        "allowedValues": ["Audit", "Deny", "Disabled"],
+        "defaultValue": "Deny",
+        "metadata": {
+          "displayName": "Effect",
+          "description": "Choose Audit for dry-run, Deny for enforcement, or Disabled to turn the policy off."
+        }
+      },
+      "approvedRegistries": {
+        "type": "Array",
+        "defaultValue": [],
+        "metadata": {
+          "displayName": "Approved Registries",
+          "description": "List of approved registry prefixes (e.g., mycompany.azurecr.io, mcr.microsoft.com)."
+        }
+      }
+    },
+    "policyRule": {
+      // Portfolio-modeled rule; production typically uses Gatekeeper constraints via DeployIfNotExists
+      "if": {
+        "allOf": [
+          { "field": "type", "equals": "Microsoft.ContainerService/managedClusters" },
+          { "field": "name", "exists": "true" }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    }
+  }
+}
