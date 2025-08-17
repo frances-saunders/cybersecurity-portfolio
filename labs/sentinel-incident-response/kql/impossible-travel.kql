@@ -1,0 +1,8 @@
+// impossible-travel.kql
+// Detects "impossible travel" where a user logs in from two distant locations within a short timeframe
+let thresholdMinutes = 60;
+SigninLogs
+| extend Country = tostring(LocationDetails.countryOrRegion)
+| summarize Start=min(TimeGenerated), End=max(TimeGenerated), Countries=make_set(Country) by UserPrincipalName, bin(TimeGenerated, 1h)
+| where array_length(Countries) > 1 and datetime_diff("minute", End, Start) < thresholdMinutes
+| project UserPrincipalName, Start, End, Countries
