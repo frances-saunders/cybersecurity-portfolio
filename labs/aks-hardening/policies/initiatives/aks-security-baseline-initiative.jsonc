@@ -7,11 +7,14 @@
   "type": "Microsoft.Authorization/policySetDefinitions",
 
   "properties": {
+    // Human-readable display name for portal and CLI
     "displayName": "AKS Security Baseline Initiative",
-    "description": "Bundles AKS controls for privileged containers, container registries, and Kubernetes NetworkPolicies. Ensures Kubernetes workloads meet enterprise compliance and zero-trust principles.",
+
+    // High-level description of what this initiative enforces
+    "description": "Comprehensive AKS hardening bundle covering container security, network isolation, and RBAC governance. Aligned with CIS Kubernetes Benchmark, NIST SP 800-53, and ISO 27001.",
 
     "metadata": {
-      "version": "1.0.0",
+      "version": "2.0.0",
       "category": "Kubernetes",
       "severity": "High",
       "source": "Frances Saunders Portfolio",
@@ -60,11 +63,40 @@
           "displayName": "Network Policy Effect",
           "description": "Control enforcement of Kubernetes NetworkPolicy."
         }
+      },
+      "resourceLimitEffect": {
+        "type": "String",
+        "allowedValues": ["Audit", "Deny", "Disabled"],
+        "defaultValue": "Audit",
+        "metadata": {
+          "displayName": "Resource Limits Effect",
+          "description": "Require CPU/Memory limits on all pods."
+        }
+      },
+      "namespaceEffect": {
+        "type": "String",
+        "allowedValues": ["Audit", "Deny", "Disabled"],
+        "defaultValue": "Audit",
+        "metadata": {
+          "displayName": "Namespace Governance Effect",
+          "description": "Restrict workloads from being deployed into the default namespace."
+        }
+      },
+      "keyVaultEffect": {
+        "type": "String",
+        "allowedValues": ["Audit", "Deny", "Disabled"],
+        "defaultValue": "Audit",
+        "metadata": {
+          "displayName": "Key Vault Secrets Effect",
+          "description": "Ensure Kubernetes secrets are sourced from Azure Key Vault."
+        }
       }
     },
 
+    // List of policy definitions bundled into this initiative
     "policyDefinitions": [
       {
+        // Block privileged container workloads
         "policyDefinitionReferenceId": "aks-block-privileged-containers",
         "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/aks-block-privileged-containers",
         "parameters": {
@@ -72,6 +104,7 @@
         }
       },
       {
+        // Restrict workloads to use only approved registries
         "policyDefinitionReferenceId": "aks-restrict-approved-registries",
         "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/aks-restrict-approved-registries",
         "parameters": {
@@ -80,10 +113,35 @@
         }
       },
       {
+        // Enforce network policies in every namespace
         "policyDefinitionReferenceId": "aks-enforce-network-policy",
         "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/aks-enforce-network-policy",
         "parameters": {
           "effect": { "value": "[parameters('netpolEffect')]" }
+        }
+      },
+      {
+        // Require resource requests/limits for all pods
+        "policyDefinitionReferenceId": "aks-require-resource-limits",
+        "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/aks-require-resource-limits",
+        "parameters": {
+          "effect": { "value": "[parameters('resourceLimitEffect')]" }
+        }
+      },
+      {
+        // Restrict workloads from running in default namespace
+        "policyDefinitionReferenceId": "aks-restrict-default-namespace",
+        "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/aks-restrict-default-namespace",
+        "parameters": {
+          "effect": { "value": "[parameters('namespaceEffect')]" }
+        }
+      },
+      {
+        // Ensure all Kubernetes secrets are backed by Azure Key Vault
+        "policyDefinitionReferenceId": "aks-require-keyvault-secrets",
+        "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/aks-require-keyvault-secrets",
+        "parameters": {
+          "effect": { "value": "[parameters('keyVaultEffect')]" }
         }
       }
     ]
