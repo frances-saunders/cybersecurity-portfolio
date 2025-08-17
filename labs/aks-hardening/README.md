@@ -1,28 +1,16 @@
+# AKS Hardening Lab
 
-# AKS Hardening in Azure
-
-## Problem / Challenge
-
-Azure Kubernetes Service (AKS) provides agility and scalability, but by default exposes organizations to risks such as insecure networking, privilege escalation, and deployment of workloads from unapproved sources.
-
-During audits and reviews, gaps were identified:
-
-* Lack of enforced baseline **network restrictions** between pods and external services.
-* Developers creating **privileged containers** and using unapproved registries.
-* Inconsistent enforcement of **RBAC roles and pod-level security standards**.
-* Use of **host namespaces** that could lead to privilege escalation.
-* Minimal automation for cluster governance, creating drift from hardened standards.
-
-The challenge was to design and implement a **compliance baseline** that enforced security controls across AKS in a repeatable, automated, and auditable way.
+This lab demonstrates the implementation of the **Azure Kubernetes Service (AKS) Security Baseline** using a combination of Azure Policies, Terraform infrastructure as code, and Kubernetes best practices. It is designed to showcase applied security skills in cloud-native environments while maintaining compliance with enterprise requirements.
 
 ---
 
 ## Role & Tools
 
-**Role:** Cloud Security Administrator (solo project)
+**Role:** Cloud Security Administrator (solo project)  
 **Tools & Technologies:** Azure Policy, Kubernetes RBAC & Network Policies, Terraform, kubectl
 
 ---
+
 
 ## Lab Structure
 
@@ -58,95 +46,114 @@ aks-hardening/
 └── README.md                  
 ````
 
-## Actions Taken
+---
 
-### Policy Authoring (AKS Security Baseline)
+## Objectives
 
-Created Azure Policy definitions targeting AKS clusters to enforce:
-
-* **Block privileged containers**.
-* **Restrict unapproved registries**.
-* **Require NetworkPolicies** for namespaces.
-* **Enforce pod security standards** (baseline/restricted profiles).
-* **Restrict host namespaces** (hostNetwork, hostPID, hostIPC).
-
-### Initiative (Policy Bundling)
-
-Bundled the above policies into a **AKS Security Baseline Initiative**.
-
-* Centralized enforcement parameters for consistency.
-* Mapped controls to **CIS Kubernetes Benchmark**, **NIST SP 800-53**, and **ISO 27001**.
-* Enabled modular rollout by separating network, container, and RBAC controls.
-
-### Assignments at Scope
-
-Applied the initiative at the subscription/resource group level.
-
-* **Deny** used for high-severity risks (privileged containers, host namespaces).
-* **Audit** used for phased rollout of lower-risk controls.
-* Scoped exclusions for non-production clusters.
-
-### Kubernetes Workload Controls
-
-Applied workload-level Kubernetes manifests:
-
-* **Network policies** – deny-all baseline, allow DNS, allow ACR egress, allow frontend–backend traffic.
-* **RBAC roles** – developer role, role bindings, and pod-reader role.
-
-### Infrastructure as Code (Terraform)
-
-Provisioned AKS clusters and security controls through Terraform.
-
-* `main.tf`, `variables.tf`, `outputs.tf`, and `terraform.tfvars` deploy AKS with secure defaults.
-* Automated policy set assignment at provisioning time.
-* Integrated Log Analytics workspace for monitoring and audit.
+- Deploy a hardened AKS cluster aligned with Microsoft’s security baseline.  
+- Enforce compliance and security controls using Azure Policy assignments.  
+- Validate cluster networking restrictions through Kubernetes Network Policies.  
+- Implement RBAC policies for least-privilege access control.  
+- Demonstrate infrastructure-as-code practices with Terraform.  
 
 ---
 
-## Results / Impact
+## Prerequisites
 
-* Hardened AKS workloads against **privilege escalation and insecure deployments**.
-* Reduced risk of **lateral movement** through deny-by-default networking.
-* Enforced pod-level security standards aligned with CIS benchmarks.
-* Automated environment builds with Terraform for **consistency and auditability**.
-* Delivered a reusable **AKS hardening blueprint** for enterprise workloads.
-
----
-
-## Artifacts
-
-**Policy Definitions**
-
-* Block Privileged Containers
-* Restrict Approved Registries
-* Enforce NetworkPolicy
-* Enforce Pod Security Standards
-* Restrict Host Namespace
-
-**Initiative**
-
-* AKS Security Baseline Initiative
-
-**Assignment**
-
-* Subscription-level AKS Security Baseline Assignment
-
-**Kubernetes Manifests**
-
-* Network Policies (deny-all, DNS egress, ACR egress, frontend-backend)
-* RBAC Roles (developer, role binding, pod reader)
-
-**Terraform**
-
-* IaC for AKS cluster provisioning and policy assignment
+- **Azure CLI** installed and authenticated (`az login`).  
+- **kubectl** installed and configured.  
+- **Terraform CLI** v1.3 or later.  
+- Permissions to create and manage:
+  - Resource Groups  
+  - AKS Clusters  
+  - Networking resources (VNets, Subnets, NSGs)  
+  - Azure Policy definitions and assignments  
 
 ---
 
-## Key Takeaways
+## Deployment Workflow
 
-This lab demonstrates advanced skills in **cloud-native security, Policy as Code, and Infrastructure as Code**. Key outcomes include:
+1. **Provision Infrastructure (Terraform)**  
+   Navigate to the `terraform/` directory and deploy the AKS cluster:
 
-* Deployment of an **end-to-end AKS hardening baseline**.
-* Alignment with **industry benchmarks (CIS, NIST, ISO 27001)**.
-* Integration of governance and workload-level security.
-* Repeatable, automated, and auditable deployments.
+   ```bash
+   terraform init
+   terraform plan -out aks-hardening.plan
+   terraform apply "aks-hardening.plan"
+    ```
+
+Once complete, retrieve cluster credentials:
+
+```bash
+az aks get-credentials --resource-group <rg_name> --name <cluster_name>
+kubectl get nodes
+```
+
+2. **Apply Security Policies (Azure Policy)**
+   The following are enforced through policy definitions, initiatives, and assignments:
+
+   * Restricting public IPs on AKS nodes
+   * Enforcing Azure Monitor integration
+   * Enabling diagnostic logging
+   * Restricting insecure configurations
+
+   Policy artifacts are located in the `policies/` directory.
+
+3. **Validate Networking Controls (Kubernetes Manifests)**
+   Deploy the sample workloads located in the `manifests/` folder:
+
+   ```bash
+   kubectl apply -f manifests/
+   ```
+
+   Then review the `manifests/network/README.md` for validation steps.
+   Example verification commands:
+
+   ```bash
+   kubectl -n <namespace> get pods -l tier=frontend
+   kubectl -n <namespace> get pods -l tier=backend
+   kubectl get networkpolicy
+   ```
+
+4. **Validate RBAC Controls (Kubernetes Manifests)**
+   Apply RBAC configuration:
+
+   ```bash
+   kubectl apply -f manifests/rbac/
+   ```
+
+   Test access restrictions by attempting to perform unauthorized actions using a service account bound by the rolebinding.
+
+---
+
+## Teardown
+
+To clean up all resources:
+
+```bash
+terraform destroy
+```
+
+Ensure that no test workloads remain:
+
+```bash
+kubectl delete -f manifests/
+```
+
+---
+
+## Security Considerations
+
+* All configurations align with the AKS Security Baseline reference architecture.
+* Policies are parameterized to support customization of effects (Audit, Deny, Disabled).
+* Network Policies restrict pod-to-pod communication to enforce least-privilege.
+* RBAC enforces least-privilege access across cluster roles and service accounts.
+* Integration with Log Analytics enables centralized monitoring and auditing.
+
+---
+
+## References
+
+* [Azure Kubernetes Service (AKS) Baseline Architecture](https://learn.microsoft.com/azure/architecture/reference-architectures/containers/aks/secure-baseline-aks)
+* [Azure Policy for Kubernetes](https://learn.microsoft.com/azure/governance/policy/concepts/policy-for-kubernetes)
+* [Terraform AKS Resource Documentation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster)
