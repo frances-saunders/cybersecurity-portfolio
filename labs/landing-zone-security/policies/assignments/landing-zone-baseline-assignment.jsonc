@@ -1,0 +1,40 @@
+{
+  // Schema reference for policy assignment
+  "$schema": "https://schema.management.azure.com/schemas/2019-09-01/policyAssignment.json#",
+  "name": "landing-zone-baseline-assignment",
+  "type": "Microsoft.Authorization/policyAssignments",
+  "properties": {
+    "displayName": "Landing Zone Baseline Assignment",
+    "description": "Assignment of the Landing Zone Baseline initiative to enforce foundational governance controls.",
+    "policyDefinitionId": "/providers/Microsoft.Authorization/policySetDefinitions/landing-zone-baseline", 
+    // Replace with the correct resource ID of the initiative in your environment
+    "enforcementMode": "Default",
+    "parameters": {
+      "location": {
+        "value": "eastus"
+      },
+      "namePattern": {
+        "value": "^[a-z]{2,5}-[a-z0-9]{2,8}-[a-z]{2,5}$"
+      },
+      "requiredTags": {
+        "value": [
+          "Owner",
+          "Environment",
+          "CostCenter"
+        ]
+      },
+      "allowedSkus": {
+        "value": [
+          "Standard_B1s",
+          "Standard_B2s",
+          "Standard_D2s_v3"
+        ]
+      }
+    },
+    "nonComplianceMessages": [
+      {
+        "message": "This resource violates Landing Zone Baseline controls and must comply with governance policies."
+      }
+    ]
+  }
+}
