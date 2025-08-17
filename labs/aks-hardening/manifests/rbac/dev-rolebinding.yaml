@@ -1,0 +1,30 @@
+apiVersion: r1
+kind: List
+items:
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: RoleBinding
+  metadata:
+    name: bind-dev-namespace-contributor
+    namespace: <your-namespace>
+  subjects:
+  - kind: Group
+    name: <aad-group-name-or-id>  # e.g., "aks-devs"
+    apiGroup: rbac.authorization.k8s.io
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: Role
+    name: dev-namespace-contributor
+
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: RoleBinding
+  metadata:
+    name: bind-pod-reader
+    namespace: <your-namespace>
+  subjects:
+  - kind: Group
+    name: <ops-readonly-group>  # e.g., "aks-ops-readers"
+    apiGroup: rbac.authorization.k8s.io
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: Role
+    name: pod-reader
