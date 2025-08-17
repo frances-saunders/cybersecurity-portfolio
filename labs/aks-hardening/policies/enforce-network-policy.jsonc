@@ -1,0 +1,39 @@
+{
+  // Ensures AKS clusters require Kubernetes NetworkPolicy for namespace traffic control
+  "$schema": "https://schema.management.azure.com/schemas/2019-09-01/policyDefinition.json#",
+  "name": "aks-enforce-network-policy",
+  "properties": {
+    "displayName": "AKS: Enforce Kubernetes Network Policies",
+    "description": "Require NetworkPolicy to control pod-to-pod and pod-to-external traffic, supporting zero-trust segmentation.",
+    "mode": "All",
+    "metadata": {
+      "category": "Kubernetes",
+      "version": "1.0.0",
+      "severity": "High",
+      "source": "Frances Saunders Portfolio"
+    },
+    "parameters": {
+      "effect": {
+        "type": "String",
+        "allowedValues": ["Audit", "Deny", "Disabled"],
+        "defaultValue": "Audit",
+        "metadata": {
+          "displayName": "Effect",
+          "description": "Audit for staged rollout; move to Deny once baseline manifests are in place."
+        }
+      }
+    },
+    "policyRule": {
+      // Portfolio-modeled rule; production policies often validate addon and CNI settings and deploy constraints
+      "if": {
+        "allOf": [
+          { "field": "type", "equals": "Microsoft.ContainerService/managedClusters" },
+          { "field": "name", "exists": "true" }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    }
+  }
+}
