@@ -1,0 +1,19 @@
+{
+  // Require MFA for all users except break-glass accounts
+  "id": "ca-require-mfa-all",
+  "displayName": "Require MFA for All Users",
+  "state": "enabled",
+  "conditions": {
+    "users": {
+      "includeUsers": ["All"],
+      "excludeUsers": [
+        "breakglass1@contoso.com",
+        "breakglass2@contoso.com"
+      ]
+    }
+  },
+  "grantControls": {
+    "operator": "OR",
+    "builtInControls": ["mfa"]
+  }
+}
