@@ -1,0 +1,32 @@
+{
+  "properties": {
+    "displayName": "Require MFA for privileged accounts",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "Ensure all privileged accounts (e.g., Global Admin, Privileged Role Administrator) have MFA enabled.",
+    "metadata": {
+      "category": "Identity",
+      "version": "1.0.0"
+    },
+    "parameters": {},
+    "policyRule": {
+      "if": {
+        "field": "Microsoft.Authorization/roleAssignments/roleDefinitionId",
+        "in": [
+          "/providers/Microsoft.Authorization/roleDefinitions/62e90394-69f5-4237-9190-012177145e10", // Global Administrator
+          "/providers/Microsoft.Authorization/roleDefinitions/fe930be7-5e62-47db-91af-98c3a49a38b1"  // Privileged Role Administrator
+        ]
+      },
+      "then": {
+        "effect": "auditIfNotExists",
+        "details": {
+          "type": "Microsoft.Authorization/policies/auditIfNotExists",
+          "existenceCondition": {
+            "field": "Microsoft.Directory/user/strongAuthenticationMethods[*].methodType",
+            "equals": "MultiFactorAuth"
+          }
+        }
+      }
+    }
+  }
+}
