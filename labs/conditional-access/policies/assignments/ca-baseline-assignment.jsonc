@@ -1,0 +1,47 @@
+{
+  // Assignment schema for applying the Conditional Access Baseline Initiative
+  "$schema": "https://schema.management.azure.com/schemas/2019-09-01/policyAssignment.json#",
+
+  // Unique internal name for the assignment
+  "name": "ca-baseline-assignment",
+  "type": "Microsoft.Authorization/policyAssignments",
+
+  "properties": {
+    "displayName": "Conditional Access Baseline Assignment",
+    "description": "Assigns the Conditional Access Baseline Initiative at the tenant root group to enforce MFA, block legacy auth, restrict by location, and require compliant devices.",
+
+    // The initiative definition being assigned
+    "policyDefinitionId": "/providers/Microsoft.Authorization/policySetDefinitions/ca-baseline-initiative",
+
+    "scope": "/providers/Microsoft.Management/managementGroups/<mgmt_group_id>",
+
+    // Metadata about the assignment
+    "metadata": {
+      "version": "1.0.0",
+      "category": "Identity & Access Management",
+      "source": "Frances Saunders Portfolio"
+    },
+
+    // Enforcement state for the assignment
+    "enforcementMode": "Default",
+
+    // Parameter values for each policy in the initiative
+    "parameters": {
+      "mfaEffect": {
+        "value": "Enforce"
+      },
+      "compliantDeviceEffect": {
+        "value": "Enforce"
+      },
+      "blockLegacyEffect": {
+        "value": "Enforce"
+      },
+      "locationEffect": {
+        "value": "Enforce"
+      },
+      "portalMfaEffect": {
+        "value": "Enforce"
+      }
+    }
+  }
+}
