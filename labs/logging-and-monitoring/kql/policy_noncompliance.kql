@@ -1,0 +1,5 @@
+// Surfaces non-compliant resources from Azure Policy
+PolicyResources
+| where ComplianceState == "NonCompliant"
+| project TimeGenerated, PolicyAssignmentName, PolicyDefinitionName, ResourceId, ComplianceState
+| order by TimeGenerated desc
