@@ -1,119 +1,117 @@
-# AKS Hardening in Azure
+# Case Study: AKS Hardening in Azure
 
 ## Problem / Challenge
 
-The Azure Kubernetes Service (AKS) platform provides agility and scalability but by default leaves organizations exposed to risks such as overly permissive networking, privilege escalation, and deployment of insecure workloads.
-During audits and security reviews, gaps were identified around:
+Kubernetes provides flexibility and scalability, but by default it is not secure enough for enterprise workloads. Azure Kubernetes Service (AKS), if deployed without guardrails, leaves organizations vulnerable to:
 
-* Lack of baseline network restrictions between pods and external services.
-* Developers creating privileged containers and pulling images from unapproved registries.
-* Inconsistent RBAC role enforcement across namespaces.
-* Minimal automation for cluster provisioning, making environments drift away from hardened standards.
+* **Privileged containers** with escalated access.
+* **Unrestricted image pulls** from unapproved registries.
+* **Lack of NetworkPolicies**, allowing lateral movement.
+* **Inconsistent RBAC enforcement**, risking excessive access.
+* **Use of host namespaces** (`hostNetwork`, `hostPID`, `hostIPC`), which could lead to privilege escalation.
 
-The challenge was to design and implement a security baseline that enforced **network, RBAC, and workload controls** across AKS clusters in a repeatable, automated, and auditable way.
+During audits, these risks were identified as high-priority gaps that required a **repeatable security baseline** for AKS.
 
 ---
 
 ## Role & Tools
 
-**Role:** Cloud Admin / Security Lead (solo project)  
-**Tools & Technologies:** Azure Policy, Kubernetes RBAC & Network Policies, Terraform, kubectl
+**Role:** Cloud Security Administrator
+**Tools & Technologies:** Azure Policy, Kubernetes RBAC, Kubernetes Network Policies, Terraform, kubectl
 
 ---
 
 ## Actions Taken
 
-### Broad Policy Authoring (AKS Security Baseline)
+### Policy Authoring
 
-Designed and implemented Azure JSONC policy definitions targeting AKS, including:
+I authored custom Azure Policies to cover container runtime and networking security:
 
-* **Networking controls** – enforced namespace-level network policies, blocked workloads without policies, and required deny-by-default rules.
-* **Container security** – restricted privileged containers, enforced approved image registries, and required baseline pod security standards.
-* **Governance & RBAC** – ensured least-privilege developer roles with namespace scoping.
+* Block privileged containers.
+* Restrict workloads to approved registries.
+* Require namespace-level NetworkPolicies.
+* Enforce pod security standards (baseline/restricted profiles).
+* Restrict host namespaces (hostNetwork, hostPID, hostIPC).
 
-These policies aligned with CIS Kubernetes Benchmarks, NIST SP 800-53, and Microsoft’s AKS Baseline reference architecture.
+### Initiative Development
 
-### Initiative (Policy Sets) for AKS Compliance
+I bundled the policies into an **AKS Security Baseline Initiative** that:
 
-Grouped individual policies into an **AKS Security Baseline initiative**.
+* Centralized parameters for flexible enforcement.
+* Mapped to **CIS Kubernetes Benchmark**, **NIST SP 800-53**, and **ISO 27001**.
+* Allowed modular assignment of networking, container, and RBAC controls.
 
-* Centralized parameters for consistent enforcement across clusters.
-* Metadata mapped controls to CIS Kubernetes Benchmark and NIST standards.
-* Created modular bundles so specific controls (e.g., network vs. container) could be assigned separately.
+### Policy Assignments
 
-### Assignments at Scope
+The initiative was assigned at the subscription level:
 
-Applied the **AKS Security Baseline initiative assignment** at the subscription level.
-
-* Used `Deny` for critical violations (e.g., privileged containers).
+* **Deny** mode for high-risk settings (privileged containers, host namespaces).
+* **Audit** mode for phased rollout of lower-risk controls.
 * Scoped exclusions for dev/test clusters.
-* Allowed `Audit` mode in phased rollout for less critical policies.
 
-### Kubernetes Manifests for Workload-Level Security
+### Workload Security (Kubernetes Manifests)
 
-Developed manifests for:
+I implemented YAML manifests to enforce workload controls:
 
-* **Network Policies** – `default-deny-all.yaml`, `allow-dns-egress.yaml`, `allow-egress-to-acr.yaml`, `allow-frontend-backend.yaml`.
-* **RBAC Roles** – `dev-role.yaml`, `dev-rolebinding.yaml`, `pod-reader-role.yaml`.
-
-These were applied via kubectl and versioned in Git for traceability.
+* **Network Policies:** deny-all baseline, allow DNS egress, allow ACR egress, allow frontend–backend communication.
+* **RBAC Roles:** developer role, role bindings, pod-reader role.
 
 ### Infrastructure as Code (Terraform)
 
-Automated AKS provisioning and security integration using Terraform.
+Using Terraform, I automated cluster provisioning with embedded security:
 
-* `main.tf`, `variables.tf`, `outputs.tf`, `terraform.tfvars` deployed AKS clusters with secure defaults.
-* Integrated policy assignments and role bindings into Terraform workflow.
-* Enabled consistent deployment across multiple environments.
+* Defined AKS with secure defaults (`main.tf`, `variables.tf`, `outputs.tf`, `terraform.tfvars`).
+* Integrated policy assignments into Terraform.
+* Linked monitoring with Log Analytics for compliance visibility.
 
 ---
 
 ## Results / Impact
 
-* Implemented an **end-to-end AKS security baseline** with both policy-driven and manifest-level controls.
-* Hardened workloads against privilege escalation and unapproved registries.
-* Reduced risk of lateral movement through deny-by-default networking.
-* Streamlined environment builds with repeatable Terraform automation.
-* Established a reusable blueprint for AKS hardening that can be extended to other containerized workloads.
+* Built an **end-to-end AKS hardening model** covering governance and workloads.
+* Eliminated insecure practices like privileged containers and unapproved registries.
+* Reduced attack surface by requiring deny-by-default networking.
+* Embedded CIS benchmark and NIST controls into AKS operations.
+* Delivered a **reusable Terraform-driven blueprint** for secure cluster deployments.
 
 ---
 
-## Artifacts (Networking & RBAC Examples Only)
+## Artifacts
 
-While this portfolio only demonstrates AKS networking, RBAC, and container policies for brevity and NDA compliance, the actual implementation included dozens of policies across governance, storage, and access controls.
-
-**Policy Definitions (AKS Examples)**
+**Policy Definitions**
 
 * Block Privileged Containers
 * Restrict Approved Registries
-* Enforce Network Policy
+* Enforce NetworkPolicy
+* Enforce Pod Security Standards
+* Restrict Host Namespace
 
-**Initiative (AKS Example)**
+**Initiative**
 
 * AKS Security Baseline Initiative
 
-**Assignment (AKS Example)**
+**Assignment**
 
-* AKS Security Baseline Assignment
+* AKS Security Baseline Subscription Assignment
 
-**Kubernetes Manifests (Networking & RBAC)**
+**Kubernetes Manifests**
 
-* Network policies (deny-all, DNS egress, ACR egress, frontend-backend)
-* RBAC roles (developer, role binding, pod reader)
+* Network Policies (deny-all, DNS egress, ACR egress, frontend-backend)
+* RBAC Roles (developer, role binding, pod reader)
 
 **Terraform**
 
-* IaC for AKS cluster provisioning and policy assignments
+* IaC for secure AKS provisioning and policy enforcement
 
 ---
 
 ## Key Takeaways
 
-This project demonstrates my ability to secure containerized workloads through **policy-driven governance, Kubernetes workload controls, and IaC automation**. While the portfolio shows a subset of artifacts, the actual implementation enforced 100+ policies across multiple domains, resulting in:
+This project highlights my ability to:
 
-* Consistent AKS hardening across clusters and environments.
-* Compliance alignment with CIS Kubernetes Benchmarks and NIST controls.
-* Automated, auditable, and repeatable deployments using Terraform.
-* Integration of governance and workload controls for end-to-end security.
+* Apply **Policy as Code** to secure container platforms.
+* Enforce **pod-level and cluster-level security standards**.
+* Automate provisioning with **Infrastructure as Code**.
+* Align enterprise Kubernetes deployments with **CIS, NIST, and ISO 27001** benchmarks.
 
-This initiative established a **repeatable AKS hardening model** that embedded security into both the cluster and workload layers, transforming AKS from a flexible but exposed platform into a secure foundation for enterprise workloads.
+The end result was a hardened, automated, and auditable AKS deployment model — transforming AKS from a flexible but exposed platform into a secure foundation for enterprise workloads.
