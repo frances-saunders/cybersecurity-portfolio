@@ -1,0 +1,47 @@
+{
+  // Schema reference for Azure Policy definition
+  "$schema": "https://raw.githubusercontent.com/Azure/enterprise-azure-policy-as-code/main/Schemas/policy-definition-schema.json",
+  "name": "enforce-naming-convention",
+  "properties": {
+    "displayName": "Enforce Naming Convention",
+    "description": "Ensures all resources follow organizational naming standards.",
+    "mode": "All",
+    "metadata": {
+      "category": "General",
+      "version": "1.0.0"
+    },
+    "parameters": {
+      "namePattern": {
+        "type": "String",
+        "metadata": {
+          "description": "Regex pattern for allowed resource names.",
+          "displayName": "Name Pattern"
+        }
+      },
+      "effect": {
+        "type": "String",
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Deny",
+        "metadata": {
+          "description": "The effect if the resource name does not match the regex.",
+          "displayName": "Effect"
+        }
+      }
+    },
+    "policyRule": {
+      "if": {
+        "not": {
+          "field": "name",
+          "match": "[parameters('namePattern')]"
+        }
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    }
+  }
+}
