@@ -15,7 +15,7 @@ The challenge was to establish a **repeatable IAM governance baseline** that min
 
 ## Role & Tools
 
-**Role:** Cloud Admin / Security Lead (solo project)
+**Role:** Cloud Admin / Security Lead (solo project)  
 **Tools & Technologies:** Azure Policy, Azure Active Directory, Log Analytics, Terraform
 
 ---
