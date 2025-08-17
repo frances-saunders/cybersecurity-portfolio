@@ -1,0 +1,38 @@
+// Enforce CPU and memory requests/limits on pods
+{
+  "properties": {
+    "displayName": "AKS - Require Resource Limits",
+    "policyType": "Custom",
+    "mode": "Indexed",
+    "description": "Ensures all pods define CPU and memory requests/limits to prevent noisy neighbor and DoS risks.",
+    "metadata": {
+      "category": "Kubernetes",
+      "version": "1.0.0"
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Kubernetes/connectedClusters/pods"
+          },
+          {
+            "anyOf": [
+              {
+                "field": "Microsoft.Kubernetes/connectedClusters/pods/spec.containers.resources.limits.cpu",
+                "exists": "false"
+              },
+              {
+                "field": "Microsoft.Kubernetes/connectedClusters/pods/spec.containers.resources.limits.memory",
+                "exists": "false"
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
