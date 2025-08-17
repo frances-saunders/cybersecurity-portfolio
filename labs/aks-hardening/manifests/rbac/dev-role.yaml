@@ -1,0 +1,27 @@
+apiVersion: r1
+kind: List
+items:
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: Role
+  metadata:
+    name: dev-namespace-contributor
+    namespace: <your-namespace>
+  rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch", "delete"]  # allow rolling cleanup, not create
+  - apiGroups: [""]
+    resources: ["pods/eviction"]
+    verbs: ["create"]  # safe eviction, no direct pod create
+  - apiGroups: [""]
+    resources: ["services", "endpoints", "configmaps"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "watch"]  # read only; no secret write in dev role
+  - apiGroups: ["autoscaling"]
+    resources: ["horizontalpodautoscalers"]
+    verbs: ["get", "list", "watch"]
