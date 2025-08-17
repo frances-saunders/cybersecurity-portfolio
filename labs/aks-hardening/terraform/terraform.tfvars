@@ -31,3 +31,14 @@ api_server_authorized_ip_ranges = [
 
 # Replace this with your Log Analytics Workspace resource ID
 log_analytics_workspace_id = "/subscriptions/<sub_id>/resourceGroups/<rg_name>/providers/Microsoft.OperationalInsights/workspaces/<law_name>"
+
+# -----------------------------
+# Policy Parameters
+# -----------------------------
+privileged_effect     = "Deny"
+registry_effect       = "Deny"
+approved_registries   = ["mcr.microsoft.com", "mycompany.azurecr.io"]
+netpol_effect         = "Audit"
+resource_limit_effect = "Audit"
+namespace_effect      = "Deny"
+keyvault_effect       = "Audit"
