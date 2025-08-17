@@ -1,0 +1,8 @@
+// Detects privileged container attempts and RBAC escalations in AKS audit logs
+AzureDiagnostics
+| where Category == "kube-audit"
+| where log_s contains "privileged" or log_s contains "cluster-admin"
+| extend PodName = tostring(parse_json(log_s).objectRef.name)
+| extend Namespace = tostring(parse_json(log_s).objectRef.namespace)
+| project TimeGenerated, PodName, Namespace, log_s
+| order by TimeGenerated desc
