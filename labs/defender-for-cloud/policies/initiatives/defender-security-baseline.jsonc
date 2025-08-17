@@ -1,0 +1,63 @@
+// Azure Policy Initiative: Defender for Cloud Security Baseline
+{
+  "properties": {
+    "displayName": "Defender for Cloud Security Baseline",
+    "policyType": "Custom",
+    "description": "Groups policies that enforce Microsoft Defender for Cloud baseline requirements, including auto-provisioning, security contact configuration, and Log Analytics workspace integration.",
+    "metadata": {
+      "category": "Defender for Cloud",
+      "version": "1.0.0"
+    },
+    "parameters": {
+      "securityContactEmail": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Security Contact Email",
+          "description": "The email address to configure as the security contact."
+        }
+      },
+      "securityContactPhone": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Security Contact Phone",
+          "description": "The phone number to configure as the security contact."
+        }
+      },
+      "logAnalyticsWorkspaceId": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Log Analytics Workspace Resource ID",
+          "description": "The resource ID of the Log Analytics workspace for Defender for Cloud integration."
+        }
+      }
+    },
+    "policyDefinitions": [
+      {
+        "policyDefinitionReferenceId": "autoProvisioning",
+        "policyDefinitionId": "[resourceId('Microsoft.Authorization/policyDefinitions', 'auto-provisioning-defender')]",
+        "parameters": {}
+      },
+      {
+        "policyDefinitionReferenceId": "logAnalytics",
+        "policyDefinitionId": "[resourceId('Microsoft.Authorization/policyDefinitions', 'require-defender-log-analytics')]",
+        "parameters": {
+          "logAnalyticsWorkspaceId": {
+            "value": "[parameters('logAnalyticsWorkspaceId')]"
+          }
+        }
+      },
+      {
+        "policyDefinitionReferenceId": "securityContact",
+        "policyDefinitionId": "[resourceId('Microsoft.Authorization/policyDefinitions', 'require-security-contact')]",
+        "parameters": {
+          "securityContactEmail": {
+            "value": "[parameters('securityContactEmail')]"
+          },
+          "securityContactPhone": {
+            "value": "[parameters('securityContactPhone')]"
+          }
+        }
+      }
+    ]
+  }
+}
