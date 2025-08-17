@@ -1,0 +1,53 @@
+// Azure Policy Definition: Enable Microsoft Defender for App Services
+{
+  "properties": {
+    "displayName": "Enable Microsoft Defender for App Services",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "Ensures Microsoft Defender is enabled for all App Service resources.",
+    "metadata": {
+      "category": "Defender for Cloud",
+      "version": "1.0.0"
+    },
+    "parameters": {},
+    "policyRule": {
+      "if": {
+        "field": "type",
+        "equals": "Microsoft.Web/serverFarms"
+      },
+      "then": {
+        "effect": "deployIfNotExists",
+        "details": {
+          "type": "Microsoft.Security/pricings",
+          "name": "AppServices",
+          "existenceCondition": {
+            "field": "Microsoft.Security/pricings/pricingTier",
+            "equals": "Standard"
+          },
+          "roleDefinitionIds": [
+            "/providers/Microsoft.Authorization/roleDefinitions/fd9d4c06-0a2b-4e1d-bdf9-3b68e0f327f4"
+          ],
+          "deployment": {
+            "properties": {
+              "mode": "incremental",
+              "template": {
+                "$schema": "http://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                "contentVersion": "1.0.0.0",
+                "resources": [
+                  {
+                    "type": "Microsoft.Security/pricings",
+                    "apiVersion": "2022-05-01",
+                    "name": "AppServices",
+                    "properties": {
+                      "pricingTier": "Standard"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
