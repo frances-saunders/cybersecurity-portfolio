@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-to-acr
+  namespace: <your-namespace>
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 10.20.30.0/24   # replace with your ACR private endpoint subnet or approved egress CIDR
+      ports:
+        - protocol: TCP
+          port: 443
