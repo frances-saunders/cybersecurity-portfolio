@@ -112,6 +112,3 @@ This project demonstrates my ability to implement **enterprise landing zone gove
 * Seamless integration into Terraform for **automation-first governance**.
 
 This initiative established a **repeatable landing zone baseline model** that eliminated drift, streamlined audits, and aligned compliance with financial accountability across the enterprise.
-
-
-Do you want me to also draft the **Landing Zone Lab README** (like we did for AKS hardening), so the case study and repo artifacts line up?
