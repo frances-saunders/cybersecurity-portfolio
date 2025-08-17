@@ -1,0 +1,37 @@
+{
+  "properties": {
+    "displayName": "IAM Hardening Assignment",
+    "description": "Assignment of the IAM Hardening Initiative to enforce privileged access, guest restrictions, managed identities governance, and IAM logging.",
+    "metadata": {
+      "assignedBy": "Cloud Admin",
+      "source": "Custom",
+      "version": "1.0.0"
+    },
+    "scope": "/subscriptions/<your-subscription-id>",
+    "notScopes": [
+      // Add any exclusions here, such as test subscriptions or sandbox environments
+    ],
+    "parameters": {
+      "allowedDomains": {
+        "value": [
+          "trustedpartner.com",
+          "contoso.com"
+        ]
+      },
+      "daysInactive": {
+        "value": 90
+      },
+      "allowedScopes": {
+        "value": [
+          "/subscriptions/<your-subscription-id>/resourceGroups/identity-rg",
+          "/subscriptions/<your-subscription-id>/resourceGroups/core-services-rg"
+        ]
+      },
+      "logAnalyticsWorkspaceId": {
+        "value": "/subscriptions/<your-subscription-id>/resourceGroups/monitoring-rg/providers/Microsoft.OperationalInsights/workspaces/core-law"
+      }
+    },
+    "enforcementMode": "Default",
+    "policyDefinitionId": "/providers/Microsoft.Authorization/policySetDefinitions/iam-hardening"
+  }
+}
