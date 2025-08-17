@@ -1,0 +1,22 @@
+{
+  "properties": {
+    "displayName": "Restrict service principal creation",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "Limit who can register applications or create service principals to reduce attack surface.",
+    "metadata": {
+      "category": "Identity",
+      "version": "1.0.0"
+    },
+    "parameters": {},
+    "policyRule": {
+      "if": {
+        "field": "Microsoft.Authorization/roleAssignments/roleDefinitionId",
+        "equals": "/providers/Microsoft.Authorization/roleDefinitions/4c8f8f12-2b71-4e6a-b10e-20b743fef6c1" // Application Administrator
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
