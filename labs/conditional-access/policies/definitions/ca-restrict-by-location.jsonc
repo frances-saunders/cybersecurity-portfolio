@@ -1,0 +1,19 @@
+{
+  // Block sign-ins from high-risk or non-corporate locations
+  "id": "ca-restrict-by-location",
+  "displayName": "Restrict Access by Location",
+  "state": "enabled",
+  "conditions": {
+    "locations": {
+      "includeLocations": ["All"],
+      "excludeLocations": [
+        "trustedCorporateNetwork",
+        "headquarters"
+      ]
+    }
+  },
+  "grantControls": {
+    "operator": "OR",
+    "builtInControls": ["mfa"]
+  }
+}
