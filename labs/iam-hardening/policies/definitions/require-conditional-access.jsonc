@@ -1,0 +1,33 @@
+{
+  "properties": {
+    "displayName": "Require Conditional Access for privileged accounts",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "Blocks role assignments if Conditional Access policies are not enforced for privileged accounts.",
+    "metadata": {
+      "category": "Identity",
+      "version": "1.0.0"
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "microsoft.authorization/roleassignments"
+          },
+          {
+            "field": "microsoft.authorization/roleassignments/roleDefinitionId",
+            "equals": "/providers/Microsoft.Authorization/roleDefinitions/<GlobalAdmin>"
+          },
+          {
+            "field": "microsoft.directoryservices/users/conditionalAccessStatus",
+            "notEquals": "enabled"
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
