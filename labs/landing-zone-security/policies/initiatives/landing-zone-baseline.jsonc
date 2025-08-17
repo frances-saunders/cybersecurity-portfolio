@@ -1,0 +1,86 @@
+{
+  // Schema reference for Azure PolicySet (initiative) definition
+  "$schema": "https://raw.githubusercontent.com/Azure/enterprise-azure-policy-as-code/main/Schemas/policy-set-definition-schema.json",
+  "name": "landing-zone-baseline",
+  "properties": {
+    "displayName": "Landing Zone Baseline Controls",
+    "description": "Baseline governance initiative for Azure Landing Zones, enforcing security, compliance, and operational consistency.",
+    "metadata": {
+      "category": "General",
+      "version": "1.0.0",
+      "source": "Portfolio Lab - Landing Zone"
+    },
+    "parameters": {
+      "location": {
+        "type": "String",
+        "metadata": {
+          "description": "Approved location for resource deployments.",
+          "displayName": "Allowed Location"
+        }
+      },
+      "namePattern": {
+        "type": "String",
+        "metadata": {
+          "description": "Regex pattern that resource names must follow.",
+          "displayName": "Name Pattern"
+        }
+      },
+      "requiredTags": {
+        "type": "Array",
+        "metadata": {
+          "description": "Tags that must be applied to all resources.",
+          "displayName": "Required Tags"
+        }
+      },
+      "allowedSkus": {
+        "type": "Array",
+        "metadata": {
+          "description": "List of allowed VM SKUs.",
+          "displayName": "Allowed VM SKUs"
+        }
+      }
+    },
+    "policyDefinitions": [
+      {
+        "policyDefinitionReferenceId": "allowed-locations",
+        "policyDefinitionName": "allowed-locations",
+        "parameters": {
+          "listOfAllowedLocations": {
+            "value": "[parameters('location')]"
+          }
+        }
+      },
+      {
+        "policyDefinitionReferenceId": "enforce-naming-convention",
+        "policyDefinitionName": "enforce-naming-convention",
+        "parameters": {
+          "namePattern": {
+            "value": "[parameters('namePattern')]"
+          }
+        }
+      },
+      {
+        "policyDefinitionReferenceId": "require-tags",
+        "policyDefinitionName": "require-tags",
+        "parameters": {
+          "requiredTags": {
+            "value": "[parameters('requiredTags')]"
+          }
+        }
+      },
+      {
+        "policyDefinitionReferenceId": "restrict-vm-skus",
+        "policyDefinitionName": "restrict-vm-skus",
+        "parameters": {
+          "allowedSkus": {
+            "value": "[parameters('allowedSkus')]"
+          }
+        }
+      },
+      {
+        "policyDefinitionReferenceId": "enable-diagnostics",
+        "policyDefinitionName": "enable-diagnostics"
+      }
+    ]
+  }
+}
