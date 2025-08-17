@@ -8,35 +8,34 @@ This lab demonstrates the implementation of the **Azure Kubernetes Service (AKS)
 
 ```
 aks-hardening/
-├── manifests/ # Kubernetes manifests for workload testing
-│ ├── frontend-deployment.yaml
-│ ├── backend-deployment.yaml
-│ ├── rbac/ # RBAC configuration
-│ │ └── rolebinding.yaml
-│ ├── network/ # Network policies and validation steps
-│ │ ├── allow-frontend-backend.yaml
-│ │ ├── default-deny-all.yaml
-│ │ ├── deny-all-egress.yaml
-│ │ ├── namespace-isolation.yaml
-│ │ └── README.md
-│ └── network-policy.yaml
-├── terraform/ # Terraform IaC for AKS baseline deployment
-│ ├── main.tf
-│ ├── variables.tf
-│ ├── outputs.tf
-│ ├── terraform.tfvars
-│ └── README.md
-├── policies/ # Azure Policy as Code artifacts
-│ ├── assignments/
-│ │ └── aks-security-baseline-assignment.jsonc
-│ ├── definitions/
-│ │ ├── deny-public-ip-on-aks.jsonc
-│ │ ├── enforce-azure-monitor.jsonc
-│ │ ├── enforce-diagnostic-logs.jsonc
-│ │ └── restrict-insecure-config.jsonc
-│ └── initiatives/
-│ └── aks-security-baseline-initiative.jsonc
-└── README.md                   
+├── manifests/                         
+│   ├── network/                       
+│   │   ├── README.md
+│   │   ├── allow-dns-egress.yaml
+│   │   ├── allow-egress-to-acr.yaml
+│   │   ├── allow-frontend-backend.yaml
+│   │   └── default-deny-all.yaml
+│   ├── rbac/                          
+│   │   ├── dev-role.yaml
+│   │   ├── dev-rolebinding.yaml
+│   │   └── pod-reader-role.yaml
+│   └── README.md
+├── policies/                          
+│   ├── assignments/
+│   │   └── aks-security-baseline-assignment.jsonc
+│   ├── definitions/
+│   │   ├── block-privileged-containers.jsonc
+│   │   ├── enforce-network-policy.jsonc
+│   │   └── restrict-approved-registries.jsonc
+│   └── initiatives/
+│       └── aks-security-baseline-initiative.jsonc
+├── terraform/                         
+│   ├── README.md
+│   ├── main.tf
+│   ├── outputs.tf
+│   ├── terraform.tfvars
+│   └── variables.tf
+└── README.md                  
 ````
 
 ---
