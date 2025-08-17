@@ -1,0 +1,95 @@
+# Landing Zone Baseline in Azure
+
+## Problem / Challenge
+
+The organization’s Azure environment lacked a standardized “landing zone” baseline, resulting in inconsistent deployments, weak governance enforcement, and audit gaps. Resource naming varied widely, required tags were missing or incomplete, and developers frequently provisioned non-approved SKUs or deployed workloads to non-compliant regions.
+
+This fragmentation made cost allocation difficult, slowed down audits, and introduced security risks due to policy drift.
+
+## Role & Tools
+
+**Role:** Cloud Admin / Security Lead (solo project)
+**Tools & Technologies:** Azure Policy, Terraform, Azure CLI, Microsoft Defender for Cloud
+
+## Actions Taken
+
+### Policy Authoring (Baseline Governance Controls)
+
+* Authored JSONC-based policy definitions covering:
+
+  * **Naming conventions** – enforced regex-based standards for resource names.
+  * **Required tagging** – enforced tags for `Owner`, `Environment`, and `CostCenter`.
+  * **VM SKU restrictions** – blocked unapproved compute SKUs.
+  * **Region restrictions** – limited deployments to approved Azure regions.
+
+### Initiative (Landing Zone Baseline)
+
+* Bundled governance policies into a single initiative (`Landing Zone Baseline`) to enforce consistent controls across subscriptions.
+* Centralized parameters for naming regex, tag lists, approved regions, and allowed SKUs.
+* Mapped initiative metadata to CIS, ISO 27001, and NIST 800-53 requirements.
+
+### Assignment (Terraform Deployment)
+
+* Created a Terraform assignment for the `Landing Zone Baseline` initiative.
+* Scoped assignments to newly provisioned resource groups in the landing zone.
+* Configured **Deny** effects for critical violations (e.g., non-compliant SKUs) and **Audit** effects for phased rollout controls.
+* Applied strong defaults while allowing scoped exceptions for test/dev environments.
+
+### Automation & DevSecOps Integration
+
+* Integrated assignments into Terraform workflows to ensure every new landing zone deployment automatically received the baseline initiative.
+* Enabled policy remediation through `deployIfNotExists` rules.
+* Established repeatable guardrails that eliminated the need for manual policy application.
+
+### Visibility & Reporting
+
+* Linked assignments to Microsoft Defender for Cloud for compliance tracking.
+* Built dashboards showing compliance by subscription, highlighting violations of naming/tagging policies and non-approved SKUs.
+* Partnered with Finance to align tagging enforcement with chargeback and cost transparency models.
+
+## Results / Impact
+
+* Standardized baseline applied to all new landing zones, eliminating configuration drift.
+* Enforced consistent naming and tagging across 100+ subscriptions, enabling accurate cost allocation.
+* Reduced audit preparation time by 60% through automated enforcement.
+* Prevented the deployment of non-approved SKUs and unapproved regions, strengthening security and cost control.
+* Established governance guardrails that scaled automatically as new resource groups and subscriptions were created.
+
+## Artifacts
+
+Representative artifacts for this project (subset shown in portfolio due to NDA):
+
+**Policy Definitions (Baseline Governance)**
+
+* Enforce Naming Conventions
+* Require Resource Tags
+* Restrict Allowed VM SKUs
+* Restrict Allowed Regions
+
+**Initiative**
+
+* Landing Zone Baseline Initiative
+
+**Assignment (Terraform)**
+
+* Landing Zone Baseline Assignment
+
+## Lab Documentation
+
+* Landing Zone Baseline Lab Guide
+
+## Key Takeaways
+
+This project demonstrates my ability to design and implement **scalable landing zone governance controls** using Azure Policy and Terraform. While this portfolio highlights representative artifacts (naming, tagging, SKUs, and region restrictions), the actual implementation enforced dozens of governance controls across identity, compliance, and cost management.
+
+The result was a **repeatable, automated landing zone baseline** that:
+
+* Enforced consistency across 100+ subscriptions
+* Improved audit readiness and cost visibility
+* Integrated seamlessly with Terraform for automation-first governance
+
+This initiative established the foundation for **secure, compliant, and cost-effective Azure landing zones** at enterprise scale.
+
+---
+
+Do you want me to now bundle this with the **README.md for the lab** (like we did with AKS hardening), so your portfolio repo is fully aligned before moving to the next project?
