@@ -1,0 +1,33 @@
+{
+  "properties": {
+    "displayName": "Require Privileged Identity Management (PIM) for privileged role assignments",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "Ensures privileged Azure AD roles are only assigned through PIM for just-in-time, time-bound activation.",
+    "metadata": {
+      "category": "Identity",
+      "version": "1.0.0"
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "microsoft.authorization/roleassignments"
+          },
+          {
+            "field": "microsoft.authorization/roleassignments/roleDefinitionId",
+            "in": [
+              "/providers/Microsoft.Authorization/roleDefinitions/<Owner>",
+              "/providers/Microsoft.Authorization/roleDefinitions/<Contributor>",
+              "/providers/Microsoft.Authorization/roleDefinitions/<User Access Administrator>"
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
