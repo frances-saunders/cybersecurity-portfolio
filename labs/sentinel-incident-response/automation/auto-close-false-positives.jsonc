@@ -1,0 +1,91 @@
+{
+  // -------------------------------
+  // Logic App template for Sentinel response playbook
+  // Automatically closes false-positive incidents
+  // -------------------------------
+
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+
+  "parameters": {
+    "playbookName": {
+      "type": "string",
+      "defaultValue": "Auto-Close-False-Positives",
+      "metadata": {
+        "description": "Name of the Sentinel playbook"
+      }
+    },
+    "sentinelConnectionName": {
+      "type": "string",
+      "defaultValue": "azureSentinel",
+      "metadata": {
+        "description": "Connection name for Microsoft Sentinel"
+      }
+    }
+  },
+
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2019-05-01",
+      "name": "[parameters('playbookName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "state": "Enabled",
+        "definition": {
+          "$schema": "https://schema.management.azure.com/schemas/2016-06-01/workflowdefinition.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {},
+          "triggers": {
+            // Triggered by a new Sentinel incident
+            "Microsoft_Sentinel_incident": {
+              "type": "ApiConnectionWebhook",
+              "inputs": {
+                "host": {
+                  "connection": {
+                    "name": "@parameters('sentinelConnectionName')"
+                  }
+                },
+                "path": "/incidentWebhook",
+                "method": "post"
+              }
+            }
+          },
+          "actions": {
+            // Condition: Check if incident matches false-positive criteria
+            "Check_False_Positive": {
+              "type": "If",
+              "expression": {
+                "or": [
+                  { "equals": [ "@triggerBody()?['Title']", "Test Alert" ] },
+                  { "equals": [ "@triggerBody()?['ProductName']", "Defender ATP Demo" ] }
+                ]
+              },
+              "actions": {
+                // Action: Close the incident
+                "Close_Incident": {
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('sentinelConnectionName')"
+                      }
+                    },
+                    "method": "post",
+                    "path": "/closeIncident",
+                    "body": {
+                      "IncidentId": "@triggerBody()?['IncidentId']",
+                      "Classification": "FalsePositive",
+                      "Comment": "Automatically closed as false positive"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "outputs": {}
+        }
+      }
+    }
+  ]
+}
