@@ -1,0 +1,30 @@
+// Deny pods that attempt to mount hostPath volumes
+{
+  "properties": {
+    "displayName": "AKS - Restrict HostPath Volumes",
+    "policyType": "Custom",
+    "mode": "Indexed",
+    "description": "Prevents pods from mounting hostPath volumes, reducing the risk of privilege escalation.",
+    "metadata": {
+      "category": "Kubernetes",
+      "version": "1.0.0"
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Kubernetes/connectedClusters/pods"
+          },
+          {
+            "field": "Microsoft.Kubernetes/connectedClusters/pods/spec.volumes.hostPath",
+            "exists": "true"
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
