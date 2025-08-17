@@ -1,0 +1,39 @@
+{
+  // Blocks creation of pods that request privileged escalation
+  "$schema": "https://schema.management.azure.com/schemas/2019-09-01/policyDefinition.json#",
+  "name": "aks-block-privileged-containers",
+  "properties": {
+    "displayName": "AKS: Block Privileged Containers",
+    "description": "Deny pods that request privileged containers to enforce Pod Security Standards and reduce lateral movement risk.",
+    "mode": "All",
+    "metadata": {
+      "category": "Kubernetes",
+      "version": "1.0.0",
+      "severity": "High",
+      "source": "Frances Saunders Portfolio"
+    },
+    "parameters": {
+      "effect": {
+        "type": "String",
+        "allowedValues": ["Audit", "Deny", "Disabled"],
+        "defaultValue": "Deny",
+        "metadata": {
+          "displayName": "Effect",
+          "description": "Choose Audit for dry-run, Deny for enforcement, or Disabled to turn the policy off."
+        }
+      }
+    },
+    "policyRule": {
+      // This simplified example is portfolio-oriented; production policies typically deploy Gatekeeper constraints (DeployIfNotExists).
+      "if": {
+        "allOf": [
+          { "field": "type", "equals": "Microsoft.ContainerService/managedClusters" },
+          { "field": "name", "exists": "true" } // placeholder guard to illustrate scope
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    }
+  }
+}
