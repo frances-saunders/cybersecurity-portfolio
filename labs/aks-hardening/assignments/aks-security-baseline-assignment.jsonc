@@ -1,0 +1,54 @@
+{
+  // Azure Policy assignment schema
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/policyAssignment.json#",
+
+  // Unique name for the assignment
+  "name": "aksSecurityBaselineAssignment",
+
+  "type": "Microsoft.Authorization/policyAssignments",
+  "properties": {
+    // Friendly display name as it appears in the Azure Portal
+    "displayName": "AKS Security Baseline – Enforce Initiative",
+
+    // Business context for reviewers and auditors
+    "description": "Assigns the AKS Security Baseline Initiative at subscription scope to enforce privileged container restrictions, approved registries, and Kubernetes NetworkPolicy.",
+
+    "metadata": {
+      "version": "1.0.0",
+      "category": "Kubernetes",
+      "source": "Frances Saunders Portfolio"
+    },
+
+    // Subscription-level scope for portfolio demonstration.
+    // Replace <your-subscription-id> with a non-sensitive demo GUID if you commit this publicly.
+    "scope": "/subscriptions/<your-subscription-id>",
+
+    // Reference the initiative definition created in: policies/initiatives/aks-security-baseline-initiative.jsonc
+    "policyDefinitionId": "/providers/Microsoft.Authorization/policySetDefinitions/aks-security-baseline-initiative",
+
+    // Bind initiative-level parameters to concrete values for this assignment
+    "parameters": {
+      // Block privileged containers in all clusters
+      "privilegedEffect": { "value": "Deny" },
+
+      // Enforce approved image provenance and block the rest
+      "registryEffect": { "value": "Deny" },
+
+      // Example allowlist (adjust to your demo registries)
+      "approvedRegistries": {
+        "value": [
+          "mycompany.azurecr.io",
+          "mcr.microsoft.com"
+        ]
+      },
+
+      // Stage NetworkPolicy enforcement: start in Audit, move to Deny later
+      "netpolEffect": { "value": "Audit" }
+    },
+
+    // Optional: Exclude specific resource groups (e.g., sandboxes, break-glass)
+    "notScopes": [
+      "/subscriptions/<your-subscription-id>/resourceGroups/aks-sandbox-rg"
+    ]
+  }
+}
