@@ -1,71 +1,86 @@
-// Terraform main configuration for AKS Hardening Lab
-
+// -----------------------------
+// Provider & Resource Group
+// -----------------------------
 provider "azurerm" {
   features {}
 }
 
-data "azurerm_subscription" "current" {}
-
-resource "azurerm_resource_group" "aks" {
+resource "azurerm_resource_group" "rg" {
   name     = var.resource_group_name
   location = var.location
+  tags     = var.tags
 }
 
+// -----------------------------
 // AKS Cluster
+// -----------------------------
 resource "azurerm_kubernetes_cluster" "aks" {
   name                = var.cluster_name
-  location            = azurerm_resource_group.aks.location
-  resource_group_name = azurerm_resource_group.aks.name
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
   dns_prefix          = var.dns_prefix
 
   default_node_pool {
-    name       = "systempool"
+    name       = "default"
     node_count = var.node_count
-    vm_size    = var.node_vm_size
+    vm_size    = var.vm_size
+    vnet_subnet_id = var.subnet_id
   }
 
   identity {
     type = "SystemAssigned"
   }
 
-  network_profile {
-    network_plugin = "azure"
-    network_policy = "azure"
+  api_server_authorized_ip_ranges = var.api_server_authorized_ip_ranges
+
+  oms_agent {
+    log_analytics_workspace_id = var.log_analytics_workspace_id
   }
 
-  role_based_access_control_enabled = true
+  tags = var.tags
 }
 
-// Policy Initiative (from definition JSONC)
+// -----------------------------
+// AKS Security Baseline Initiative
+// -----------------------------
+// NOTE: Policy definition JSONC lives in policies/definitions
+// Terraform references it so governance stays IaC-driven.
+
 resource "azurerm_policy_set_definition" "aks_security_baseline" {
   name         = "aks-security-baseline-initiative"
   policy_type  = "Custom"
   display_name = "AKS Security Baseline Initiative"
+  description  = "Bundles AKS controls for privileged containers, registries, and network policies"
 
-  // Reference your JSONC file
-  metadata = jsonencode({
-    category = "Kubernetes"
-  })
-
+  // Import initiative definition from file
   policy_definitions = file("${path.module}/../policies/initiatives/aks-security-baseline-initiative.jsonc")
 }
 
+// -----------------------------
 // Policy Assignment
+// -----------------------------
+// Assigns the AKS Security Baseline Initiative at the RG scope
+
 resource "azurerm_policy_assignment" "aks_security_baseline" {
   name                 = "aks-security-baseline-assignment"
-  display_name         = "AKS Security Baseline Assignment"
-  scope                = azurerm_resource_group.aks.id
+  scope                = azurerm_resource_group.rg.id
   policy_definition_id = azurerm_policy_set_definition.aks_security_baseline.id
-  description          = "Assignment of AKS security baseline initiative to enforce hardened standards"
+  display_name         = "AKS Security Baseline Assignment"
 
+  // Example parameterization
   parameters = jsonencode({
-    privilegedEffect    = { value = var.privileged_effect }
-    registryEffect      = { value = var.registry_effect }
-    approvedRegistries  = { value = var.approved_registries }
-    netpolEffect        = { value = var.netpol_effect }
-    resourceLimitEffect = { value = var.resource_limit_effect }
-    namespaceEffect     = { value = var.namespace_effect }
-    keyVaultEffect      = { value = var.keyvault_effect }
+    privilegedEffect = {
+      value = "Deny"
+    }
+    registryEffect = {
+      value = "Deny"
+    }
+    approvedRegistries = {
+      value = ["myregistry.azurecr.io"]
+    }
+    netpolEffect = {
+      value = "Audit"
+    }
   })
 
   identity {
