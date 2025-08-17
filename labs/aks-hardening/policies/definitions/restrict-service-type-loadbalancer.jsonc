@@ -1,0 +1,30 @@
+// Deny creation of external LoadBalancer services
+{
+  "properties": {
+    "displayName": "AKS - Restrict Service Type LoadBalancer",
+    "policyType": "Custom",
+    "mode": "Indexed",
+    "description": "Blocks creation of external LoadBalancer services unless explicitly required.",
+    "metadata": {
+      "category": "Kubernetes",
+      "version": "1.0.0"
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Kubernetes/connectedClusters/services"
+          },
+          {
+            "field": "Microsoft.Kubernetes/connectedClusters/services/spec.type",
+            "equals": "LoadBalancer"
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
