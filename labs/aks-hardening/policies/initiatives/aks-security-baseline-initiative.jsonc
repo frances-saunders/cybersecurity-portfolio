@@ -1,0 +1,91 @@
+{
+  // Initiative schema for bundling AKS policy definitions
+  "$schema": "https://schema.management.azure.com/schemas/2019-09-01/policyDefinitionSet.json#",
+
+  // Unique internal name for the initiative
+  "name": "aks-security-baseline-initiative",
+  "type": "Microsoft.Authorization/policySetDefinitions",
+
+  "properties": {
+    "displayName": "AKS Security Baseline Initiative",
+    "description": "Bundles AKS controls for privileged containers, container registries, and Kubernetes NetworkPolicies. Ensures Kubernetes workloads meet enterprise compliance and zero-trust principles.",
+
+    "metadata": {
+      "version": "1.0.0",
+      "category": "Kubernetes",
+      "severity": "High",
+      "source": "Frances Saunders Portfolio",
+      "compliance": {
+        "frameworks": [
+          "NIST SP 800-53",
+          "ISO 27001",
+          "CIS Kubernetes Benchmark"
+        ]
+      }
+    },
+
+    // Parameters allow flexible enforcement across environments
+    "parameters": {
+      "privilegedEffect": {
+        "type": "String",
+        "allowedValues": ["Audit", "Deny", "Disabled"],
+        "defaultValue": "Deny",
+        "metadata": {
+          "displayName": "Privileged Containers Effect",
+          "description": "Control enforcement of privileged container restrictions."
+        }
+      },
+      "registryEffect": {
+        "type": "String",
+        "allowedValues": ["Audit", "Deny", "Disabled"],
+        "defaultValue": "Deny",
+        "metadata": {
+          "displayName": "Approved Registries Effect",
+          "description": "Control enforcement of approved registry restrictions."
+        }
+      },
+      "approvedRegistries": {
+        "type": "Array",
+        "defaultValue": [],
+        "metadata": {
+          "displayName": "Approved Registries",
+          "description": "List of approved container registries."
+        }
+      },
+      "netpolEffect": {
+        "type": "String",
+        "allowedValues": ["Audit", "Deny", "Disabled"],
+        "defaultValue": "Audit",
+        "metadata": {
+          "displayName": "Network Policy Effect",
+          "description": "Control enforcement of Kubernetes NetworkPolicy."
+        }
+      }
+    },
+
+    "policyDefinitions": [
+      {
+        "policyDefinitionReferenceId": "aks-block-privileged-containers",
+        "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/aks-block-privileged-containers",
+        "parameters": {
+          "effect": { "value": "[parameters('privilegedEffect')]" }
+        }
+      },
+      {
+        "policyDefinitionReferenceId": "aks-restrict-approved-registries",
+        "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/aks-restrict-approved-registries",
+        "parameters": {
+          "effect": { "value": "[parameters('registryEffect')]" },
+          "approvedRegistries": { "value": "[parameters('approvedRegistries')]" }
+        }
+      },
+      {
+        "policyDefinitionReferenceId": "aks-enforce-network-policy",
+        "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/aks-enforce-network-policy",
+        "parameters": {
+          "effect": { "value": "[parameters('netpolEffect')]" }
+        }
+      }
+    ]
+  }
+}
