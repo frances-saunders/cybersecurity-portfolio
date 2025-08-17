@@ -1,0 +1,101 @@
+{
+  // -------------------------------
+  // Logic App template for Sentinel response playbook
+  // Enriches incident entities with external threat intelligence
+  // -------------------------------
+
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+
+  "parameters": {
+    "playbookName": {
+      "type": "string",
+      "defaultValue": "Enrich-With-Threat-Intel",
+      "metadata": {
+        "description": "Name of the Sentinel playbook"
+      }
+    },
+    "sentinelConnectionName": {
+      "type": "string",
+      "defaultValue": "azureSentinel",
+      "metadata": {
+        "description": "Connection name for Microsoft Sentinel"
+      }
+    },
+    // Example parameter for external threat intelligence API key
+    "threatIntelApiKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "API key for Threat Intelligence provider"
+      }
+    }
+  },
+
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2019-05-01",
+      "name": "[parameters('playbookName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "state": "Enabled",
+        "definition": {
+          "$schema": "https://schema.management.azure.com/schemas/2016-06-01/workflowdefinition.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {},
+          "triggers": {
+            // Triggered by a new Sentinel incident
+            "Microsoft_Sentinel_incident": {
+              "type": "ApiConnectionWebhook",
+              "inputs": {
+                "host": {
+                  "connection": {
+                    "name": "@parameters('sentinelConnectionName')"
+                  }
+                },
+                "path": "/incidentWebhook",
+                "method": "post"
+              }
+            }
+          },
+          "actions": {
+            // Extract IP entity from incident
+            "Extract_IP": {
+              "type": "Compose",
+              "inputs": "@triggerBody()?['Entities'][0]['Address']"
+            },
+            // Call external threat intelligence API
+            "Query_Threat_Intel": {
+              "type": "Http",
+              "inputs": {
+                "method": "GET",
+                "uri": "https://api.threatintelprovider.com/ip/@{outputs('Extract_IP')}",
+                "headers": {
+                  "Authorization": "Bearer @{parameters('threatIntelApiKey')}"
+                }
+              }
+            },
+            // Append enrichment data back into incident comments
+            "Update_Incident": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": {
+                  "connection": {
+                    "name": "@parameters('sentinelConnectionName')"
+                  }
+                },
+                "method": "post",
+                "path": "/updateIncident",
+                "body": {
+                  "IncidentId": "@triggerBody()?['IncidentId']",
+                  "Comment": "Threat Intel Enrichment: @{body('Query_Threat_Intel')}"
+                }
+              }
+            }
+          },
+          "outputs": {}
+        }
+      }
+    }
+  ]
+}
