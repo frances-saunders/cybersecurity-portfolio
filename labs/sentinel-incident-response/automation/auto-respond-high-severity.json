@@ -1,0 +1,117 @@
+{
+  // -------------------------------
+  // Logic App template for Sentinel response playbook
+  // Automatically responds to high-severity incidents
+  // -------------------------------
+
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+
+  "parameters": {
+    // Name of the playbook (Logic App) resource
+    "playbookName": {
+      "type": "string",
+      "defaultValue": "Auto-Respond-High-Severity",
+      "metadata": {
+        "description": "Name of the Sentinel playbook"
+      }
+    },
+
+    // Connection name for Microsoft Sentinel connector
+    "sentinelConnectionName": {
+      "type": "string",
+      "defaultValue": "azureSentinel",
+      "metadata": {
+        "description": "Connection name for Microsoft Sentinel"
+      }
+    }
+  },
+
+  "resources": [
+    {
+      // Resource type: Logic App workflow
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2019-05-01",
+      "name": "[parameters('playbookName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "state": "Enabled",
+
+        // Logic App workflow definition
+        "definition": {
+          "$schema": "https://schema.management.azure.com/schemas/2016-06-01/workflowdefinition.json#",
+          "contentVersion": "1.0.0.0",
+
+          "parameters": {},
+
+          // Playbook trigger - fires when Sentinel creates an incident
+          "triggers": {
+            "Microsoft_Sentinel_incident": {
+              "type": "ApiConnectionWebhook",
+              "inputs": {
+                "host": {
+                  "connection": {
+                    "name": "@parameters('sentinelConnectionName')"
+                  }
+                },
+                "path": "/incidentWebhook",
+                "method": "post"
+              }
+            }
+          },
+
+          "actions": {
+            // First action: Check severity of the incident
+            "Check_Severity": {
+              "type": "If",
+              "expression": {
+                "equals": [
+                  "@triggerBody()?['Severity']", // Incident severity property
+                  "High"                          // Only proceed if High severity
+                ]
+              },
+              "actions": {
+                // Action 1: Block the suspicious IP
+                "Block_IP": {
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('sentinelConnectionName')"
+                      }
+                    },
+                    "method": "post",
+                    "path": "/blockIP", // Stub path for integration with firewall/NSG API
+                    "body": {
+                      "IPAddress": "@triggerBody()?['Entities'][0]['Address']" // Extract IP entity from incident
+                    }
+                  }
+                },
+
+                // Action 2: Notify SecOps via Microsoft Teams
+                "Notify_SecOps": {
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('sentinelConnectionName')"
+                      }
+                    },
+                    "method": "post",
+                    "path": "/sendTeamsMessage", // Stub path for Teams connector
+                    "body": {
+                      "Message": "High severity incident detected and auto-mitigated. Details: @triggerBody()"
+                    }
+                  }
+                }
+              }
+            }
+          },
+
+          // No outputs for this playbook
+          "outputs": {}
+        }
+      }
+    }
+  ]
+}
