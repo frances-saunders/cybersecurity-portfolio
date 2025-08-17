@@ -1,0 +1,6 @@
+// Detects risky or repeated failed sign-ins from Azure AD logs
+SigninLogs
+| where ResultType != 0   // Non-successful logins
+| summarize FailedAttempts = count() by UserPrincipalName, IPAddress, bin(TimeGenerated, 1h)
+| where FailedAttempts > 5
+| order by FailedAttempts desc
