@@ -1,0 +1,25 @@
+// Azure Policy Assignment: Defender for Cloud Security Baseline
+{
+  "properties": {
+    "displayName": "Assign: Defender for Cloud Security Baseline",
+    "description": "Assignment of the Defender for Cloud Security Baseline initiative to enforce security contact, auto-provisioning, and Log Analytics workspace integration.",
+    "metadata": {
+      "assignedBy": "Cloud Admin / Security Lead",
+      "category": "Defender for Cloud"
+    },
+    "enforcementMode": "Default",
+    "parameters": {
+      "securityContactEmail": {
+        "value": "security-team@example.com" // Replace with your org's SOC email
+      },
+      "securityContactPhone": {
+        "value": "+1-555-123-4567" // Replace with SOC contact number
+      },
+      "logAnalyticsWorkspaceId": {
+        "value": "/subscriptions/<subscriptionId>/resourceGroups/<rgName>/providers/Microsoft.OperationalInsights/workspaces/<workspaceName>" // Replace with actual resource ID
+      }
+    },
+    "policyDefinitionId": "[resourceId('Microsoft.Authorization/policySetDefinitions', 'defender-security-baseline')]",
+    "scope": "/subscriptions/<subscriptionId>" // Replace with desired scope
+  }
+}
