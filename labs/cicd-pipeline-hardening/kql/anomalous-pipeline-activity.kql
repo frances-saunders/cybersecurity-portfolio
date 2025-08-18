@@ -1,0 +1,8 @@
+// Detect anomalous pipeline runs (e.g., unusual times or identities)
+AzureDiagnostics
+| where Category == "PipelineRunLogs"
+| extend RunTime = todatetime(properties_runStartTime)
+| extend InitiatedBy = tostring(properties_initiatedBy)
+| where hour(RunTime) < 5 or hour(RunTime) > 23 // Off-hours
+| summarize CountRuns = count() by InitiatedBy, bin(RunTime, 1h)
+| order by CountRuns desc
