@@ -1,0 +1,50 @@
+{
+  // Workbook schema
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json",
+
+  // Workbook metadata
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      // Title header
+      "type": 1,
+      "content": "# Zero Trust Network Segmentation Dashboard\nThis workbook provides visibility into subnet segmentation, endpoint exposure, and NSG compliance. It aligns with Zero Trust principles of deny-by-default and least privilege."
+    },
+    {
+      // Section: NSG coverage
+      "type": 9,
+      "content": {
+        "chartId": "nsg-coverage",
+        "version": "KqlItem/1.0",
+        "size": 1,
+        "query": "AzureDiagnostics | where Category == 'NetworkSecurityGroupEvent' | summarize NSGCount = dcount(Resource) by Subnet = tostring(properties['subnetName'])",
+        "chartType": "pie",
+        "title": "NSG Coverage per Subnet"
+      }
+    },
+    {
+      // Section: Overly permissive NSG rules
+      "type": 9,
+      "content": {
+        "chartId": "permissive-nsg-rules",
+        "version": "KqlItem/1.0",
+        "size": 1,
+        "query": "AzureDiagnostics | where Category == 'NetworkSecurityGroupRuleCounter' | extend RuleName = tostring(properties['ruleName']) | extend Source = tostring(properties['sourceAddressPrefix']) | extend Destination = tostring(properties['destinationAddressPrefix']) | where Source in ('*', '0.0.0.0/0') or Destination in ('*', '0.0.0.0/0') | summarize Count = count() by RuleName, Source, Destination",
+        "chartType": "table",
+        "title": "Overly Permissive NSG Rules"
+      }
+    },
+    {
+      // Section: Public endpoints without private endpoints
+      "type": 9,
+      "content": {
+        "chartId": "public-endpoints",
+        "version": "KqlItem/1.0",
+        "size": 1,
+        "query": "AzureActivity | where OperationNameValue in ('Microsoft.Network/publicIPAddresses/write','Microsoft.Network/virtualNetworkGateways/write') | extend ResourceId = tostring(parse_json(Properties).resourceId) | join kind=leftanti (ResourceContainers | where type =~ 'microsoft.network/privateendpoints' | project PrivateEndpointId = id) on $left.ResourceId == $right.PrivateEndpointId | project TimeGenerated, ResourceId, Caller, ActivityStatusValue",
+        "chartType": "timechart",
+        "title": "Public Endpoints Detected (Without Private Endpoints)"
+      }
+    }
+  ]
+}
