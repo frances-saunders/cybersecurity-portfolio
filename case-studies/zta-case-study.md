@@ -14,10 +14,8 @@ These weaknesses violate the **Zero Trust principle of least privilege** and lea
 
 ---
 
-## Role & Tools
-
-**Role:** Cloud Security Administrator  
-**Tools & Technologies:** Azure Firewall, Network Security Groups (NSGs), Azure Policy, Private Endpoints, Terraform, Microsoft Sentinel
+## Tools & Technologies
+Azure Firewall, Network Security Groups (NSGs), Azure Policy, Private Endpoints, Terraform, Microsoft Sentinel
 
 ---
 
