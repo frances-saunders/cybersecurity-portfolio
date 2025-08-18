@@ -1,0 +1,54 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2019-05-01",
+      "name": "alert-public-endpoint",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "definition": {
+          "actions": {
+            "Send_Teams_Alert": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "teams",
+                  "operationId": "PostMessageToChannel",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams"
+                },
+                "parameters": {
+                  "teamId": "<TEAM_ID>",
+                  "channelId": "<CHANNEL_ID>",
+                  "message": "⚠️ Public endpoint detected without private endpoint. Investigate immediately."
+                }
+              }
+            },
+            "Create_Ticket": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "serviceNow",
+                  "operationId": "CreateIncident",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_servicenow"
+                },
+                "parameters": {
+                  "short_description": "Public endpoint created without private endpoint.",
+                  "priority": "1",
+                  "urgency": "1"
+                }
+              }
+            }
+          },
+          "triggers": {
+            "When_Sentinel_Incident": {
+              "type": "Request",
+              "kind": "Http"
+            }
+          }
+        }
+      }
+    }
+  ]
+}
