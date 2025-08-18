@@ -1,0 +1,83 @@
+{
+  // Schema for Logic App definition
+  "$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "nsgResourceId": {
+      "type": "String",
+      "metadata": {
+        "description": "NSG Resource ID to remediate."
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2019-05-01",
+      "name": "auto-remediate-permissive-nsg",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "contentVersion": "1.0.0.0",
+          "actions": {
+            "Get_NSG_Rules": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "azure",
+                  "operationId": "GetSecurityRules",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_azure"
+                },
+                "parameters": {
+                  "resourceGroupName": "[resourceGroup().name]",
+                  "networkSecurityGroupName": "@{triggerBody()?['nsgName']}"
+                }
+              }
+            },
+            "Delete_Permissive_Rules": {
+              "foreach": "@outputs('Get_NSG_Rules')?['body/value']",
+              "actions": {
+                "Check_Rule": {
+                  "condition": "@or(equals(item()?['properties/sourceAddressPrefix'], '*'), equals(item()?['properties/destinationAddressPrefix'], '*'))",
+                  "actions": {
+                    "Delete_Rule": {
+                      "type": "ApiConnection",
+                      "inputs": {
+                        "host": {
+                          "connectionName": "azure",
+                          "operationId": "DeleteSecurityRule",
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_azure"
+                        },
+                        "parameters": {
+                          "resourceGroupName": "[resourceGroup().name]",
+                          "networkSecurityGroupName": "@{triggerBody()?['nsgName']}",
+                          "securityRuleName": "@{item()?['name']}"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "type": "Foreach"
+            }
+          },
+          "triggers": {
+            "When_Incident_Created": {
+              "type": "Request",
+              "kind": "Http",
+              "inputs": {
+                "schema": {
+                  "properties": {
+                    "nsgName": { "type": "string" }
+                  },
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
