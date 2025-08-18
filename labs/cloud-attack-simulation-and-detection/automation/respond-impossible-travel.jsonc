@@ -1,7 +1,9 @@
 {
+  // Schema reference for ARM template validation
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    // The affected user’s UPN extracted from the Sentinel incident
     "userPrincipalName": {
       "type": "string",
       "metadata": { "description": "UPN from Sentinel incident" }
@@ -16,6 +18,7 @@
       "properties": {
         "definition": {
           "actions": {
+            // Step 1: Disable the suspicious user account in Azure AD
             "Disable_User": {
               "type": "ApiConnection",
               "inputs": {
@@ -25,6 +28,7 @@
               },
               "runAfter": {}
             },
+            // Step 2: Notify SOC team via Microsoft Teams
             "Notify_Teams": {
               "type": "ApiConnection",
               "inputs": {
@@ -37,6 +41,7 @@
               },
               "runAfter": { "Disable_User": [ "Succeeded" ] }
             },
+            // Step 3: Open a ServiceNow incident for SOC tracking
             "Create_ServiceNow_Ticket": {
               "type": "ApiConnection",
               "inputs": {
@@ -52,6 +57,7 @@
             }
           },
           "triggers": {
+            // Triggered whenever Sentinel creates an incident with userPrincipalName
             "When_Sentinel_Incident_Created": {
               "type": "Request",
               "kind": "Http",
