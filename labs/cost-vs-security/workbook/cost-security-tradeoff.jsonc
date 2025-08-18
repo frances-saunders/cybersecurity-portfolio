@@ -1,0 +1,74 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": {
+          "version": "KqlItem/1.0",
+          "query": "// Sentinel ingestion costs by data type\n// Replace <workspace> with your Log Analytics workspace ID\nUsage\n| where ResourceProvider == 'MICROSOFT.OPERATIONALINSIGHTS'\n| summarize MonthlyCostUSD = sum(PreTaxCost) by DataType\n| order by MonthlyCostUSD desc\n",
+          "size": 1,
+          "title": "Top 10 Sentinel Log Sources by Monthly Cost"
+        }
+      },
+      "name": "sentinel-costs"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": {
+          "version": "KqlItem/1.0",
+          "query": "// Defender for Cloud plan spend by resource tag (e.g., Prod vs Dev)\n// Uses Azure Resource Graph to correlate with tags\nResourceContainers\n| where type =~ 'microsoft.resources/subscriptions/resourcegroups'\n| join kind=inner (Usage | where MeterCategory contains 'Security') on subscriptionId\n| summarize MonthlyCostUSD = sum(PreTaxCost) by Tags['Environment'], MeterName\n",
+          "size": 1,
+          "title": "Defender for Cloud Cost by Environment"
+        }
+      },
+      "name": "defender-costs"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": {
+          "version": "KqlItem/1.0",
+          "query": "// WAF deployments with no inbound traffic\nAzureDiagnostics\n| where ResourceType == 'APPLICATIONGATEWAYS'\n| summarize Requests = count() by Resource, bin(TimeGenerated, 30d)\n| join kind=inner (ResourceUsage | where ResourceType == 'WAF') on Resource\n| where Requests == 0\n",
+          "size": 1,
+          "title": "WAF Instances with No Inbound Traffic"
+        }
+      },
+      "name": "waf-anomalies"
+    },
+    {
+      "type": 3,
+      "content": {
+        "json": {
+          "version": "MarkdownItem/1.0",
+          "content": "## Cost vs. Risk Value Index\n\nThis section maps monthly spend to **risk coverage scores** (based on MITRE ATT&CK mappings). Controls with high cost but low detection coverage are flagged for review.\n"
+        }
+      },
+      "name": "value-index-description"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": {
+          "version": "KqlItem/1.0",
+          "query": "// Value Index Heatmap (Risk Score ÷ Monthly Cost)\n// Sample placeholder dataset — replace with your calculated scores\ndatatable(Control:string, MonthlyCostUSD:real, RiskScore:int)\n[\n  'Sentinel SecurityAlert Logs', 4000, 9,\n  'AuditLogs', 3000, 2,\n  'Defender for SQL', 2500, 8,\n  'Defender for App Services', 1500, 5,\n  'WAF (unused app)', 5000, 1\n]\n| extend ValueIndex = RiskScore / MonthlyCostUSD\n| project Control, MonthlyCostUSD, RiskScore, ValueIndex\n",
+          "size": 2,
+          "title": "Cost vs. Risk Heatmap"
+        }
+      },
+      "name": "value-index-heatmap"
+    },
+    {
+      "type": 3,
+      "content": {
+        "json": {
+          "version": "MarkdownItem/1.0",
+          "content": "## Recommendations\n\n* **Reduce** ingestion of low-value `AuditLogs` to cut $3K/month.\n* **Eliminate** unused WAF instances, saving $5K/month.\n* **Retain & expand** Defender for SQL, high ROI per dollar spent.\n* **Reallocate** savings to targeted Sentinel analytics rules with strong detection coverage.\n"
+        }
+      },
+      "name": "recommendations"
+    }
+  ],
+  "fallbackResourceIds": []
+}
