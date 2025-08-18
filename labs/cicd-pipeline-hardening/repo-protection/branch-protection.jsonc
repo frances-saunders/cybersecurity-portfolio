@@ -1,0 +1,17 @@
+{
+  // Enforce secure software supply chain
+  "branch_protection": {
+    "main": {
+      "require_pull_request_approvals": true,
+      "require_signed_commits": true,
+      "block_force_pushes": true,
+      "require_status_checks": ["codeql-analysis", "dependency-scan"],
+      "dismiss_stale_reviews": true
+    },
+    "release/*": {
+      "require_pull_request_approvals": true,
+      "require_signed_commits": true,
+      "enforce_admins": true
+    }
+  }
+}
