@@ -22,15 +22,17 @@ The artifacts are written in an **API-friendly, version-controlled format** to h
 ## Directory Structure
 
 ```plaintext
-labs/cisco-meraki-zero-trust-firewall/
+labs/meraki-zero-trust-firewall/
 ├── configs/
-│   ├── vlan-segmentation.jsonc         # VLANs and subnet design
-│   ├── firewall-rules.jsonc            # L3/L7 firewall rules with Zero Trust model
-│   ├── sdwan-failover.jsonc            # Dual WAN failover + traffic shaping
-│   └── group-policies.jsonc            # Identity-based access controls
+│   ├── vlan-segmentation.json
+│   ├── firewall-rules.json
+│   ├── sdwan-failover.json
+│   └── group-policies.json
 │
-├── readme.md
-
+├── integration/
+│   └── sentinel-syslog-forwarding.md
+│
+└── README.md
 ````
 
 ---
