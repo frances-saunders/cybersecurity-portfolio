@@ -1,0 +1,9 @@
+// Flag NSG rules that allow ANY source or ANY destination
+// Helps enforce subnet-level segmentation and Zero Trust principle
+AzureDiagnostics
+| where Category == "NetworkSecurityGroupRuleCounter"
+| extend RuleName = tostring(properties["ruleName"])
+| extend Source = tostring(properties["sourceAddressPrefix"])
+| extend Destination = tostring(properties["destinationAddressPrefix"])
+| where Source in ("*", "0.0.0.0/0") or Destination in ("*", "0.0.0.0/0")
+| project TimeGenerated, RuleName, Source, Destination, Action = properties["action"]
