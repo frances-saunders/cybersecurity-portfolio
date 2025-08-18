@@ -7,9 +7,8 @@ The challenge was to design and implement a **scalable governance framework** th
 
 ---
 
-## Role & Tools
-**Role:** Cloud Admin / Security Lead (solo project)  
-**Tools & Technologies:** Azure Policy, Azure DevOps, Microsoft Defender for Cloud, Terraform, PowerShell  
+## Tools & Technologies
+Azure Policy, Azure DevOps, Microsoft Defender for Cloud, Terraform, PowerShell  
 
 ---
 
