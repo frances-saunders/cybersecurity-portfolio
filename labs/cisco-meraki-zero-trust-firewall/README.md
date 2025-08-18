@@ -1,57 +1,68 @@
-# Cisco Meraki Zero Trust Firewall Lab
+# Cisco Meraki – Zero Trust Firewall Lab
 
 ## Overview
 
-This lab demonstrates how to design and implement **Zero Trust segmentation and adaptive firewall controls** using Cisco Meraki MX firewalls in a hybrid enterprise environment. The goal is to showcase **network security engineering skills** that bridge cloud and on-prem environments, with a focus on:
+This lab demonstrates the design and implementation of a **Zero Trust firewall architecture** using Cisco Meraki MX appliances. The focus is on enforcing **least-privilege network access**, isolating high-risk segments (IoT, guest), and maintaining **business continuity** through SD-WAN failover and application-aware traffic shaping.
 
-* **Zero Trust segmentation** between corporate, guest, and IoT networks.
-* **Adaptive policies** driven by tags, identity, and posture — not just IP addresses.
-* **Advanced logging & monitoring** exported into a SIEM (Azure Sentinel) for threat hunting.
-* **Automated failover & resilience** across multiple WAN uplinks.
+The artifacts are written in an **API-friendly, version-controlled format** to highlight automation skills and operational maturity. This mirrors how modern enterprises integrate **network security with DevSecOps practices**.
 
 ---
 
 ## Lab Objectives
 
-* Configure **VLAN-based segmentation** with Meraki MX firewalls.
-* Enforce **role-based policies** using Meraki group policies (tying into Active Directory / SAML).
-* Integrate with **Azure Sentinel** for log forwarding and real-time visibility.
-* Demonstrate **SD-WAN resiliency** and traffic shaping for critical workloads.
-* Document firewall rules and policy enforcement aligned with **Zero Trust** principles.
+* Apply **Zero Trust segmentation** across corporate, IoT, guest, and management networks.
+* Enforce **deny-all by default**, with explicit, auditable allow-rules.
+* Configure **identity-aware access controls** using Meraki Group Policies tied to AD/SAML roles.
+* Implement **SD-WAN failover** with performance-based thresholds for redundancy.
+* Apply **application-aware QoS** for critical collaboration tools (O365, Teams, VoIP).
+* Showcase **API-driven network automation** for repeatable and scalable deployments.
 
 ---
 
 ## Directory Structure
 
 ```plaintext
-labs/meraki-zero-trust-firewall/
+labs/cisco-meraki-zero-trust-firewall/
 ├── configs/
-│   ├── vlan-segmentation.json
-│   ├── firewall-rules.json
-│   ├── sdwan-failover.json
-│   └── group-policies.json
+│   ├── vlan-segmentation.jsonc         # VLANs and subnet design
+│   ├── firewall-rules.jsonc            # L3/L7 firewall rules with Zero Trust model
+│   ├── sdwan-failover.jsonc            # Dual WAN failover + traffic shaping
+│   └── group-policies.jsonc            # Identity-based access controls
 │
-├── integration/
-│   └── sentinel-syslog-forwarding.md
-│
-├── diagrams/
-│   ├── zero-trust-segmentation.png
-│   └── sdwan-failover-architecture.png
-│
-└── case-study.md
-```
+├── readme.md
+
+````
 
 ---
 
-## Artifacts
+## Deployment Steps
 
-**Configs**
+1. **VLAN Segmentation**
+   Import `configs/vlan-segmentation.jsonc` to define secure subnets for Corporate, IoT, Guest, and Management zones.
 
-* **VLAN Segmentation** – defines corporate, guest, IoT, and management VLANs.
-* **Firewall Rules** – deny-all baseline, with explicit allow rules for business-critical services.
-* **SD-WAN Failover** – dual uplink config for automatic failover and traffic shaping.
-* **Group Policies** – role-based access mapped to AD/SAML (e.g., developers, contractors, IoT devices).
+2. **Firewall Rules**
+   Apply `configs/firewall-rules.jsonc` to enforce **deny-by-default** and explicitly allow only necessary traffic flows.
 
-**Integration**
+3. **SD-WAN Failover**
+   Configure dual-WAN redundancy with `configs/sdwan-failover.jsonc`, ensuring performance-based failover and application-aware shaping.
 
-* **Sentinel Syslog Forwarding Guide** – details how Meraki logs are normalized and ingested into Sentinel for centralized SOC monitoring.
+4. **Identity-Based Policies**
+   Assign `configs/group-policies.jsonc` to map AD/SAML groups to appropriate VLANs and enforce tailored access levels.
+
+---
+
+## Skills Demonstrated
+
+* **Zero Trust Network Design** – segmentation, deny-all policies, and explicit allow-lists.
+* **Cisco Meraki Security Engineering** – VLANs, firewall rules, SD-WAN, and group policies.
+* **Identity-Aware Controls** – access tied to user/device identity via SAML/AD.
+* **Automation & Version Control** – configs designed for API integration and repeatable deployments.
+* **Operational Maturity** – balancing security with usability, performance, and business continuity.
+
+---
+
+## Portfolio Impact
+
+This lab demonstrates **10+ years of experience** in enterprise network security by showing not just the configs, but the **design rationale, Zero Trust alignment, and operational excellence** behind them. It highlights the ability to deliver **secure, automated, and auditable network architectures** that meet both technical and business objectives.
+
+```
