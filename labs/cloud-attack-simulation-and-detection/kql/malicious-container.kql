@@ -1,0 +1,7 @@
+AzureActivity
+| where OperationNameValue =~ "MICROSOFT.CONTAINERINSTANCE/CONTAINERS/WRITE"
+| extend ContainerName = tostring(parse_json(Properties).resource)
+| extend ImageName = tostring(parse_json(Properties).statusMessage.image)
+| where ImageName has "miner" or ImageName has_any ("stress", "xmrig", "cryptonight")
+| project TimeGenerated, Caller, ContainerName, ImageName, ResourceGroup, SubscriptionId
+| extend AlertName="Suspicious Container Deployment"
