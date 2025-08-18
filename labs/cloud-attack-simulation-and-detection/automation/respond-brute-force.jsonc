@@ -1,0 +1,67 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    // Attacker’s IP from Sentinel incident
+    "attackerIp": { "type": "string" }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2019-05-01",
+      "name": "respond-brute-force",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "definition": {
+          "actions": {
+            // Step 1: Block malicious IP at the NSG level
+            "Block_IP_in_NSG": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": { "connection": { "name": "@parameters('$connections')['azure']['connectionId']" } },
+                "method": "put",
+                "path": "/subscriptions/{subscriptionId}/resourceGroups/{rgName}/providers/Microsoft.Network/networkSecurityGroups/{nsgName}/securityRules/blockIP",
+                "body": {
+                  "properties": {
+                    "protocol": "*",
+                    "sourceAddressPrefix": "@{triggerBody()?['attackerIp']}",
+                    "access": "Deny",
+                    "priority": 100,
+                    "direction": "Inbound"
+                  }
+                }
+              },
+              "runAfter": {}
+            },
+            // Step 2: Notify SOC team that the IP was blocked
+            "Notify_Teams": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": { "connection": { "name": "@parameters('$connections')['teams']['connectionId']" } },
+                "method": "post",
+                "path": "/messages",
+                "body": {
+                  "text": "Brute force detected from IP @{triggerBody()?['attackerIp']}. IP blocked in NSG."
+                }
+              },
+              "runAfter": { "Block_IP_in_NSG": [ "Succeeded" ] }
+            }
+          },
+          "triggers": {
+            // Triggered whenever Sentinel raises a brute-force incident with attacker IP
+            "When_Sentinel_Incident_Created": {
+              "type": "Request",
+              "kind": "Http",
+              "inputs": {
+                "schema": {
+                  "properties": { "attackerIp": { "type": "string" } },
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
