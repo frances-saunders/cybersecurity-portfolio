@@ -12,10 +12,8 @@ Without proactive simulations, teams risk **blind spots** in impossible travel s
 
 ---
 
-## Role & Tools
-
-**Role:** Cloud Security Engineer  
-**Tools & Technologies:** Microsoft Sentinel, KQL, Azure Policy, Logic Apps, Terraform, Azure Firewall, Azure AD Identity Protection
+## Tools & Technologies
+Microsoft Sentinel, KQL, Azure Policy, Logic Apps, Terraform, Azure Firewall, Azure AD Identity Protection
 
 ---
 
