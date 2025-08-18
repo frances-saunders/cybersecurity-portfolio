@@ -1,0 +1,58 @@
+{
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json",
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "# Cloud Attack Simulation & Detection Overview\nThis workbook visualizes simulated red-team style attacks, Sentinel detection queries, and automated responses. It demonstrates SOC visibility and the impact of automation on detection & response."
+      },
+      "name": "Text - Header"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "// Impossible Travel Alerts\nSecurityIncident\n| where Title contains 'Impossible Travel'\n| summarize count() by bin(TimeGenerated, 1h), Severity\n| render timechart"
+      },
+      "name": "Impossible Travel Detection"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "// Brute Force Login Attempts\nSecurityIncident\n| where Title contains 'Brute Force'\n| summarize Attempts=count() by bin(TimeGenerated, 1h), Account\n| render barchart"
+      },
+      "name": "Brute Force Detection"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "// Malicious Container Activity\nSecurityIncident\n| where Title contains 'Container'\n| extend ContainerGroup = tostring(parse_json(Entities)[0].Name)\n| summarize Incidents=count() by ContainerGroup, bin(TimeGenerated, 1h)\n| render columnchart"
+      },
+      "name": "Malicious Container Detection"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "// Automation Impact (Playbook Coverage)\nSecurityIncident\n| summarize TotalIncidents=count(), AutoResolved=countif(ClosedReason == 'AutoResolved'),\n  Enriched=countif(AdditionalData contains 'ThreatIntel')\n| extend AutoClosePct = todouble(AutoResolved) / todouble(TotalIncidents) * 100,\n         EnrichmentPct = todouble(Enriched) / todouble(TotalIncidents) * 100"
+      },
+      "name": "Automation Metrics"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "// Mean Time to Respond (MTTR)\nSecurityIncident\n| extend ResponseMinutes = datetime_diff('minute', ClosedTime, TimeGenerated)\n| summarize AvgMTTR = avg(ResponseMinutes), MedianMTTR = percentile(ResponseMinutes, 50)\n| project AvgMTTR, MedianMTTR"
+      },
+      "name": "Mean Time to Respond"
+    }
+  ],
+  "metadata": {
+    "title": "Cloud Attack Simulation & Detection – SOC Metrics",
+    "description": "Visualizes adversary simulation detections, automated Sentinel responses, and SOC performance metrics.",
+    "author": "Your Name"
+  }
+}
