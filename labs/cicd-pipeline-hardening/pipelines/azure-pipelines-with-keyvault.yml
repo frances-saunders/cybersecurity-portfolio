@@ -1,0 +1,25 @@
+# Azure DevOps pipeline example integrating Key Vault
+trigger:
+  branches:
+    include:
+      - main
+
+variables:
+  - group: KeyVault-Secrets # Securely linked variable group
+
+stages:
+  - stage: Build
+    jobs:
+      - job: BuildJob
+        steps:
+          - checkout: self
+          - task: AzureKeyVault@2
+            inputs:
+              azureSubscription: "svc-connection-rg-only"
+              KeyVaultName: "prod-keyvault"
+              SecretsFilter: "*"
+              RunAsPreJob: true
+          - script: |
+              echo "Using secret in pipeline runtime..."
+              echo "DB_PASSWORD=$(DB-PASSWORD)"
+            displayName: "Consume Secrets"
