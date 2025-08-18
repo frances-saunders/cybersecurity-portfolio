@@ -1,0 +1,5 @@
+SigninLogs
+| where ResultType != 0   // failed logins
+| summarize FailedAttempts=count(), StartTime=min(TimeGenerated), EndTime=max(TimeGenerated), IPs=make_set(IPAddress) by UserPrincipalName, bin(TimeGenerated, 5m)
+| where FailedAttempts > 10
+| extend AlertName="Brute Force Attack Detected"
