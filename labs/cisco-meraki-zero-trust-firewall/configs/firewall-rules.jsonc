@@ -1,0 +1,61 @@
+{
+  // Layer 3 firewall rules enforcing Zero Trust model
+  // Default = deny-all; rules explicitly allow necessary flows
+
+  "rules": [
+    {
+      // Allow Corporate VLAN to reach Internet (general outbound)
+      "comment": "Corporate outbound Internet access",
+      "policy": "allow",
+      "srcCidr": "10.10.10.0/24",
+      "destCidr": "any",
+      "protocol": "any",
+      "destPort": "any"
+    },
+    {
+      // Allow Corporate VLAN to reach Management VLAN (for admins only)
+      "comment": "Corporate to Management (restricted admin traffic)",
+      "policy": "allow",
+      "srcCidr": "10.10.10.0/24",
+      "destCidr": "10.10.40.0/24",
+      "protocol": "tcp",
+      "destPort": "22,3389"
+    },
+    {
+      // Deny IoT-to-Corporate access (lateral movement prevention)
+      "comment": "Block IoT to Corporate VLAN",
+      "policy": "deny",
+      "srcCidr": "10.10.20.0/24",
+      "destCidr": "10.10.10.0/24",
+      "protocol": "any",
+      "destPort": "any"
+    },
+    {
+      // Allow IoT devices outbound only to cloud services (e.g., telemetry)
+      "comment": "IoT outbound restricted",
+      "policy": "allow",
+      "srcCidr": "10.10.20.0/24",
+      "destCidr": "52.239.0.0/16",
+      "protocol": "tcp",
+      "destPort": "443"
+    },
+    {
+      // Block Guest VLAN to internal networks
+      "comment": "Deny Guest to Corporate/IoT/Management",
+      "policy": "deny",
+      "srcCidr": "10.10.30.0/24",
+      "destCidr": "10.10.0.0/16",
+      "protocol": "any",
+      "destPort": "any"
+    },
+    {
+      // Allow Guest VLAN Internet access only
+      "comment": "Guest outbound Internet",
+      "policy": "allow",
+      "srcCidr": "10.10.30.0/24",
+      "destCidr": "any",
+      "protocol": "tcp",
+      "destPort": "80,443"
+    }
+  ]
+}
