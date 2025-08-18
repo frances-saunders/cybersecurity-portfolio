@@ -1,0 +1,26 @@
+{
+  "properties": {
+    "displayName": "Enforce Event Hubs Encryption with CMK",
+    "policyType": "Custom",
+    "mode": "Indexed",
+    "description": "This policy ensures that all Event Hub namespaces are deployed with customer-managed keys (CMK) for encryption.",
+    "parameters": {},
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.EventHub/namespaces"
+          },
+          {
+            "field": "Microsoft.EventHub/namespaces/encryption.keySource",
+            "notEquals": "Microsoft.Keyvault"
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
