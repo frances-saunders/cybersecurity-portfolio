@@ -13,9 +13,8 @@ The challenge was to design a **repeatable, automated pipeline** where Cisco Mer
 
 ---
 
-## Tools
-
-**Tools & Technologies:** Cisco Meraki MX, Syslog, Rsyslog, Ubuntu, Azure Monitor Agent (AMA), Microsoft Sentinel (Log Analytics, KQL, Workbooks, Analytics Rules)
+## Tools & Technologies
+Cisco Meraki MX, Syslog, Rsyslog, Ubuntu, Azure Monitor Agent (AMA), Microsoft Sentinel (Log Analytics, KQL, Workbooks, Analytics Rules)
 
 ---
 
