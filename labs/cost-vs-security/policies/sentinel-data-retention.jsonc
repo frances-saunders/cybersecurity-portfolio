@@ -1,0 +1,39 @@
+{
+  "properties": {
+    "displayName": "Enforce Sentinel Data Retention Policy",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "Ensures Sentinel Log Analytics workspaces use a cost-conscious retention period (e.g., 30 days). Longer retention requires justification.",
+    "metadata": {
+      "category": "Cost Optimization",
+      "version": "1.0.0"
+    },
+    "parameters": {
+      "maxRetentionDays": {
+        "type": "Integer",
+        "metadata": {
+          "displayName": "Maximum Retention (Days)",
+          "description": "Defines the upper limit of allowed retention period."
+        },
+        "defaultValue": 30
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.OperationalInsights/workspaces"
+          },
+          {
+            "field": "Microsoft.OperationalInsights/workspaces/retentionInDays",
+            "greater": "[parameters('maxRetentionDays')]"
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
