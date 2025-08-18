@@ -1,0 +1,76 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    // Container group and resource group where malicious container resides
+    "containerGroupName": { "type": "string" },
+    "resourceGroupName": { "type": "string" }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2019-05-01",
+      "name": "respond-malicious-container",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "definition": {
+          "actions": {
+            // Step 1: Stop the malicious container group immediately
+            "Stop_Container": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": { "connection": { "name": "@parameters('$connections')['azure']['connectionId']" } },
+                "method": "post",
+                "path": "/subscriptions/{subscriptionId}/resourceGroups/@{triggerBody()?['resourceGroupName']}/providers/Microsoft.ContainerInstance/containerGroups/@{triggerBody()?['containerGroupName']}/stop"
+              },
+              "runAfter": {}
+            },
+            // Step 2: Enrich the incident with threat intelligence lookup (e.g., VirusTotal)
+            "Enrich_with_Threat_Intel": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": { "connection": { "name": "@parameters('$connections')['virustotal']['connectionId']" } },
+                "method": "get",
+                "path": "/ip/{ip}",
+                "queries": {
+                  "ip": "@{triggerBody()?['sourceIp']}"
+                }
+              },
+              "runAfter": { "Stop_Container": [ "Succeeded" ] }
+            },
+            // Step 3: Notify SOC team of the container shutdown and enrichment results
+            "Notify_Teams": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": { "connection": { "name": "@parameters('$connections')['teams']['connectionId']" } },
+                "method": "post",
+                "path": "/messages",
+                "body": {
+                  "text": "Malicious container stopped: @{triggerBody()?['containerGroupName']}. Threat intel enrichment added."
+                }
+              },
+              "runAfter": { "Enrich_with_Threat_Intel": [ "Succeeded" ] }
+            }
+          },
+          "triggers": {
+            // Triggered whenever Sentinel incident points to a malicious container
+            "When_Sentinel_Incident_Created": {
+              "type": "Request",
+              "kind": "Http",
+              "inputs": {
+                "schema": {
+                  "properties": {
+                    "containerGroupName": { "type": "string" },
+                    "resourceGroupName": { "type": "string" },
+                    "sourceIp": { "type": "string" }
+                  },
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
