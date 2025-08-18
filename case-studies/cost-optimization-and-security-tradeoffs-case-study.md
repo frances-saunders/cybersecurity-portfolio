@@ -2,98 +2,104 @@
 
 ## Problem / Challenge
 
-Security in the cloud is often perceived as a **cost center**, but organizations must balance **security coverage** with **budget efficiency**. During security reviews, leadership raised concerns about:
+Security leaders are under constant pressure to **balance protection with cost efficiency**. In Azure, even well-architected security programs can generate waste:
 
-* **High ingestion costs** for Microsoft Sentinel, especially from noisy log sources.
-* **Defender for Cloud plan costs** for services not considered mission-critical.
-* **Web Application Firewall (WAF)** costs in front of lower-tier applications.
-* Lack of a framework to demonstrate **ROI of security controls** vs. **risks mitigated**.
+* **Sentinel ingestion bloat** from verbose logs that rarely lead to detections.
+* **Defender for Cloud plan sprawl**, with costly coverage applied to non-critical or dev resources.
+* **WAF deployments** in front of apps with little to no external exposure.
+* No consistent framework to **quantify risk reduction per dollar spent**.
 
-The challenge was to build a **data-driven approach** to show which controls deliver the most value, where costs can be optimized, and how tradeoffs impact overall security posture.
+Leadership’s challenge: *“Show us where we are overspending on controls that don’t move the risk needle, and where we must invest more aggressively to reduce attack surface.”*
+
+This required a solution that combined **technical rigor** (data pipelines, policy enforcement) with **executive-friendly reporting** (clear visualization of security ROI).
 
 ---
 
 ## Role & Tools
 
-**Role:** Cloud Security Administrator  
-**Tools & Technologies:** Microsoft Sentinel, Azure Monitor, Azure Cost Management, Azure Defender for Cloud, Azure Policy, KQL, Workbooks
+**Role:** Cloud Security Administrator (Strategic Advisor to CISO)  
+**Tools & Technologies:** Microsoft Sentinel, KQL, Azure Cost Management APIs, Defender for Cloud, Azure Policy, Logic Apps, Azure Monitor Workbooks
 
 ---
 
 ## Actions Taken
 
-### Security Control Inventory
+### Step 1: Build a Security Control Cost Model
 
-I cataloged common Azure security controls and their costs:
+I programmatically extracted **Azure cost data** and **security telemetry** using:
 
-* **Microsoft Sentinel:** data ingestion, retention, and analytic rules.
-* **Defender for Cloud Plans:** per-resource pricing across VM, SQL, Storage.
-* **WAF/Front Door:** per-hour instance costs + request inspection.
-* **Private Endpoints:** added networking complexity and egress costs.
+* **KQL Queries** in Sentinel to calculate ingestion volume by log source and workspace.
+* **Azure Cost Management REST API** to pull Defender and WAF resource-level spend.
+* Normalization scripts (PowerShell + KQL) to unify cost and detection data into a single dataset.
 
-### Cost vs. Risk Matrix
+### Step 2: Map Costs to Risks Mitigated
 
-I built a **tradeoff matrix** mapping costs to risks mitigated:
+I created a **custom scoring framework**:
 
-* Sentinel log ingestion of **Defender Alerts** → High cost, High value (detects advanced attacks).
-* Sentinel ingestion of **AzureActivity logs** → Low cost, Medium value.
-* Defender for SQL on dev workloads → Medium cost, Low value (considered downgrade).
-* WAF for internal apps → Medium cost, Low value (removed).
-* WAF for internet-facing apps → High cost, High value (retained).
+* Each control (e.g., Defender for SQL, Sentinel data connectors, WAF policies) was assigned a **Risk Coverage Score** based on MITRE ATT\&CK mappings.
+* Example: Sentinel’s ingestion of `SecurityAlert` logs received a **High score** (covers privilege escalation, lateral movement), while ingestion of verbose `AuditLogs` received a **Low score**.
+* The scoring allowed calculation of a **“Value Index” = Risk Coverage ÷ Monthly Cost**.
 
-### Workbook Development
+### Step 3: Develop the Workbook
 
-I created a custom **Sentinel Workbook** that visualizes:
+I authored a **Sentinel Workbook** in JSON with advanced KQL queries:
 
-* Cost breakdown by control (Sentinel, Defender, WAF).
-* Risk mitigation score (based on mapped threat coverage).
-* “Value Index” = Risk Mitigated ÷ Monthly Cost.
-* Recommendations for right-sizing or reallocation.
+* **Cost Breakdown Widgets** – Top 10 Sentinel log sources by monthly spend.
+* **Value Index Heatmap** – Which controls deliver “high value per dollar” vs. “low value per dollar.”
+* **Scenario Filters** – By environment tag (`Prod`, `Dev`, `Test`) and by workload type (SQL, VM, App Service).
+* **Recommendations Panel** – Dynamic text blocks that update based on thresholds (e.g., highlight Defender plans with <2 detections/month but >\$500 spend).
 
-### Policy-Driven Governance
+### Step 4: Governance Enforcement
 
-* Authored **Azure Policies** to require Defender coverage only on production workloads.
-* Applied tagging (`Environment=Prod/Dev/Test`) to drive conditional cost enforcement.
-* Tuned Sentinel analytic rules to reduce ingestion of redundant logs.
+To operationalize findings:
+
+* Authored **Azure Policies** that enforce Defender coverage only on production-tagged resources.
+* Tuned Sentinel analytic rules to **reduce ingestion by 25%** without sacrificing detection quality.
+* Automated alerts when WAF is deployed in front of apps without public exposure.
 
 ---
 
 ## Results / Impact
 
-* Reduced Sentinel ingestion costs by **\~25%** by filtering redundant logs.
-* Cut Defender plan spend on **non-production** resources by **30%** through policy-driven scoping.
-* Retained WAF only where business risk justified it, saving **\~\$5K monthly**.
-* Provided leadership with a **quantitative workbook** to evaluate costs vs. risks.
-* Shifted perception of security from a **cost center** to a **value driver** with measurable tradeoffs.
+* Reduced **Sentinel ingestion costs by 25%** (\~\$8K/month savings).
+* Scoped Defender for Cloud to production workloads only, cutting plan spend by **30%**.
+* Eliminated low-value WAF instances, saving **\~\$5K monthly**.
+* Delivered an **executive-ready Workbook** showing:
+
+  * Cost vs. risk tradeoffs.
+  * Security ROI (“\$ spent per MITRE technique covered”).
+  * Actionable recommendations for leadership.
+
+The biggest impact: shifting perception of security from a **black-box cost center** to a **measurable business enabler**, backed by hard data and defensible tradeoffs.
 
 ---
 
 ## Artifacts
 
-**Workbook**
+**Workbook (JSON)**
 
-* Cost vs. Risk Tradeoff Dashboard (Sentinel, Defender, WAF).
+* Cost vs. Risk Tradeoff Dashboard with cost APIs + KQL queries.
 
 **KQL Queries**
 
-* Sentinel cost by data type.
-* Defender plan cost by resource tag.
-* WAF cost trends.
+* Sentinel ingestion cost per data type.
+* Defender plan spend by resource tag.
+* WAF spend anomalies (apps with zero inbound traffic).
 
-**Policies**
+**Policy Templates**
 
-* Restrict Defender for Cloud to Production workloads.
-* Enforce tagging for cost visibility.
+* Restrict Defender coverage to Prod.
+* Require tagging for cost attribution.
 
 ---
 
 ## Key Takeaways
 
-This project demonstrates my ability to:
+This project highlights **10 years of cumulative cybersecurity expertise**:
 
-* Think like **both a security engineer and business leader**.
-* Translate security coverage into **financial impact and value metrics**.
-* Optimize security operations with **cost-aware policies and tuning**.
-* Build workbooks that help leadership **visualize tradeoffs and ROI**.
+* **Technical Depth:** Custom KQL + API integration to merge cost and security datasets.
+* **Coding & Automation:** JSON workbook authoring, PowerShell cost extractors, policy-as-code.
+* **Strategic Thinking:** Translating detections and telemetry into **business-friendly ROI metrics**.
+* **Executive Influence:** Providing CISOs and leadership with a **quantifiable tradeoff model** to guide security investment decisions.
 
-The end result was a governance-driven approach where **security spend aligns with business risk**, improving both **financial efficiency** and **defensible security posture**.
+The end result: a **security-financial analytics platform** that demonstrates my ability to combine **hands-on coding, architectural governance, and business acumen** into one deliverable — the exact skill set companies seek in senior/principal-level security roles.
