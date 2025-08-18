@@ -1,0 +1,44 @@
+{
+  // SD-WAN configuration: dual-WAN uplinks for resilience
+  // Includes performance-based failover and application-aware routing
+
+  "uplinks": {
+    "wan1": {
+      "interface": "WAN1",
+      "provider": "ISP-A",
+      "bandwidth": "500Mbps"
+    },
+    "wan2": {
+      "interface": "WAN2",
+      "provider": "ISP-B",
+      "bandwidth": "500Mbps"
+    }
+  },
+
+  "failoverPolicy": {
+    // Performance thresholds trigger WAN failover
+    "lossThreshold": "2%",       // Failover if packet loss > 2%
+    "latencyThreshold": "150ms", // Failover if latency > 150ms
+    "jitterThreshold": "50ms"    // Failover if jitter > 50ms
+  },
+
+  "trafficShaping": [
+    {
+      "comment": "Prioritize O365 / Teams traffic",
+      "applications": ["Office365", "Skype", "Teams"],
+      "policy": "prefer",
+      "preferredUplink": "wan1"
+    },
+    {
+      "comment": "VoIP – prioritize low latency",
+      "applications": ["VoIP"],
+      "policy": "prefer",
+      "preferredUplink": "wan1"
+    },
+    {
+      "comment": "Non-critical traffic (YouTube, streaming) deprioritized",
+      "applications": ["YouTube", "Netflix"],
+      "policy": "deprioritize"
+    }
+  ]
+}
