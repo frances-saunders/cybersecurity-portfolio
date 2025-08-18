@@ -1,0 +1,10 @@
+SigninLogs
+| extend Location = strcat(tostring(LocationDetails.countryOrRegion), " - ", tostring(LocationDetails.city))
+| project TimeGenerated, UserPrincipalName, IPAddress, Location
+| order by UserPrincipalName, TimeGenerated asc
+| extend PreviousLoginTime = prev(TimeGenerated), PreviousLocation = prev(Location), PreviousIP = prev(IPAddress)
+| extend TimeDiffMinutes = datetime_diff('minute', TimeGenerated, PreviousLoginTime)
+| where UserPrincipalName == Previous(UserPrincipalName)
+| where Location != PreviousLocation and TimeDiffMinutes between (0 .. 60)
+| summarize StartTime=min(PreviousLoginTime), EndTime=max(TimeGenerated), Locations=make_set(Location), IPs=make_set(IPAddress), Attempts=count() by UserPrincipalName
+| extend AlertName="Impossible Travel Detected"
