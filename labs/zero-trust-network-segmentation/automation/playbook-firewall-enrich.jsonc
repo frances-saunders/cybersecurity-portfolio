@@ -1,0 +1,63 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2019-05-01",
+      "name": "firewall-threat-enrich",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "definition": {
+          "actions": {
+            "Query_Threat_Intel": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "virustotal",
+                  "operationId": "GetReport",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_virustotal"
+                },
+                "parameters": {
+                  "ip": "@{triggerBody()?['attackerIp']}"
+                }
+              }
+            },
+            "Tag_Firewall": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "azure",
+                  "operationId": "UpdateAzureFirewall",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_azure"
+                },
+                "parameters": {
+                  "resourceGroupName": "[resourceGroup().name]",
+                  "firewallName": "zt-firewall",
+                  "tags": {
+                    "ThreatIntel": "Malicious",
+                    "SourceIP": "@{triggerBody()?['attackerIp']}"
+                  }
+                }
+              }
+            }
+          },
+          "triggers": {
+            "When_Incident_Created": {
+              "type": "Request",
+              "kind": "Http",
+              "inputs": {
+                "schema": {
+                  "properties": {
+                    "attackerIp": { "type": "string" }
+                  },
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
