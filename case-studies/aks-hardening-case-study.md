@@ -14,9 +14,8 @@ During audits, these risks were identified as high-priority gaps that required a
 
 ---
 
-## Role & Tools
+## Tools
 
-**Role:** Cloud Security Administrator
 **Tools & Technologies:** Azure Policy, Kubernetes RBAC, Kubernetes Network Policies, Terraform, kubectl
 
 ---
