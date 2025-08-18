@@ -1,51 +1,113 @@
-# README.md
+Perfect — thanks for sharing that example. Here’s the **Zero Trust Network Segmentation Lab README** rewritten to follow the exact same format and tone as your other labs (with Overview → Objectives → Directory Structure → Deployment Steps → Skills Demonstrated).
+
+---
 
 # Zero Trust Network Segmentation Lab
 
 ## Overview
-This lab demonstrates how to design, deploy, and enforce **Zero Trust network segmentation** in Azure using Terraform, Azure Firewall, Network Security Groups (NSGs), and Private Endpoints. The goal is to show how segmentation can minimize lateral movement and protect sensitive workloads, even if an attacker breaches the environment.
+
+This lab demonstrates how to apply **Zero Trust principles** in Azure through **network segmentation**, enforced with **Terraform**, **Azure Firewall**, **NSGs**, and **Private Endpoints**. It also integrates **Sentinel detections, playbooks, and workbooks** to monitor and enforce segmentation compliance.
+
+The artifacts showcase how segmentation reduces lateral movement, prevents public exposure of sensitive services, and provides automated detection and remediation of violations.
+
 ---
-## Lab Goals
-- Deploy hub-and-spoke architecture with Terraform.
-- Configure **NSGs** with deny-by-default and explicit allow rules.
-- Deploy **Azure Firewall** for central traffic inspection and control.
-- Enforce **Private Endpoints** and **Service Endpoints** for sensitive services.
-- Detect segmentation violations with KQL queries in Microsoft Sentinel.
-- Automate remediation, escalation, and enrichment using Sentinel playbooks.
-- Visualize compliance and network security posture in a Sentinel Workbook.
+
+## Lab Objectives
+
+* Deploy **hub-and-spoke architecture** with Terraform.
+* Configure **deny-by-default NSGs** with explicit allow rules.
+* Centralize inspection with **Azure Firewall DNAT/SNAT rules**.
+* Enforce **Private Endpoints** and **Service Endpoints** for sensitive services (e.g., SQL, Storage).
+* Detect misconfigurations or violations (public endpoints, overly permissive NSGs).
+* Automate remediation and escalation with **Sentinel playbooks**.
+* Visualize segmentation posture with a **Sentinel workbook**.
+
 ---
-## Lab Structure
+
+## Directory Structure
+
+```plaintext
+labs/zero-trust-network-segmentation/
+├── automation/
+│   ├── auto-remediate-nsg.jsonc
+│   ├── firewall-threat-intel-enrichment.jsonc
+│   └── public-endpoint-alert.jsonc
+│
+├── kql/
+│   ├── detect-nsg-non-compliant-subnets.kql
+│   ├── detect-overly-permissive-nsg.kql
+│   └── detect-public-endpoints.kql
+│
+├── policies/
+│   ├── deny-public-subnet.json
+│   ├── enforce-private-endpoints.json
+│   ├── initiative.json
+│   └── restrict-nsg-rules.json
+│
+├── terraform/
+│   ├── main.tf
+│   ├── outputs.tf
+│   ├── policies.tf
+│   ├── terraform.tfvars
+│   └── variables.tf
+│
+├── workbook/
+│   └── zero-trust-segmentation-overview.jsonc
+│
+└── README.md
 ```
 
-labs/
-zero-trust-network-segmentation/
-terraform/       # Terraform scripts for core deployment
-kql/             # Detection queries
-workbook/        # Sentinel workbook JSON
-automation/      # Sentinel response playbooks
-README.md        # Lab instructions and overview
-CASE\_STUDY.md    # Business-oriented case study
+---
 
-```
----
-## Tools & Technologies
-- Terraform  
-- Azure Firewall  
-- Network Security Groups (NSGs)  
-- Azure Private Endpoints + Service Endpoints  
-- Microsoft Sentinel (KQL, Playbooks, Workbooks)
----
 ## Deployment Steps
-1. Navigate to `terraform/` and update `terraform.tfvars` with your subscription details.  
-2. Run `terraform init`, `terraform plan`, and `terraform apply` to provision hub, spokes, firewall, and NSGs.  
-3. Deploy KQL queries in `kql/` into Microsoft Sentinel.  
-4. Import automation playbooks in `automation/` to enable incident response.  
-5. Import the workbook in `workbook/` to visualize compliance and segmentation posture.  
+
+### 1. Terraform (Core Setup)
+
+1. Navigate to `labs/zero-trust-network-segmentation/terraform/`.
+2. Update `terraform.tfvars` with subscription details.
+3. Run `terraform init`, `terraform plan`, and `terraform apply` to deploy:
+
+   * Hub-and-spoke VNets with subnets.
+   * NSGs (deny-by-default).
+   * Azure Firewall with DNAT/SNAT.
+   * Private Endpoints for SQL and Storage.
+
+### 2. KQL Queries (Detection)
+
+1. Navigate to `labs/zero-trust-network-segmentation/kql/`.
+2. Import queries into Microsoft Sentinel:
+
+   * `detect-public-endpoints.kql` – identifies public endpoints on sensitive services.
+   * `detect-any-to-any-nsg.kql` – flags NSG rules with overly permissive traffic.
+   * `detect-firewall-bypass.kql` – detects attempts to circumvent firewall inspection.
+
+### 3. Automation (Playbooks)
+
+1. Navigate to `labs/zero-trust-network-segmentation/automation/`.
+2. Deploy playbooks as **Azure Logic Apps**:
+
+   * `auto-remediate-nsg.jsonc` → Removes overly permissive NSG rules.
+   * `escalate-violation.jsonc` → Notifies SOC via Teams and creates ServiceNow ticket.
+   * `firewall-threat-intel-enrichment.jsonc` → Tags malicious IPs on Azure Firewall.
+
+### 4. Workbook (Visualization)
+
+1. Navigate to `labs/zero-trust-network-segmentation/workbooks/`.
+2. Import `zero-trust-segmentation-overview.jsonc` into Sentinel Workbooks.
+3. Verify visualization of:
+
+   * Subnets enforcing deny-by-default.
+   * Violations detected over time.
+   * Sensitive services accessed via private vs public endpoints.
+
 ---
-## Learning Outcomes
-By completing this lab, you will:
-- Understand Zero Trust segmentation in cloud-native environments.  
-- Apply **least privilege networking** using NSGs and firewall rules.  
-- Integrate **policy enforcement**, **detection**, and **automation** into a single workflow.  
-- Demonstrate practical expertise in balancing security, usability, and governance.
+
+## Skills Demonstrated
+
+* **Zero Trust Network Design** – hub-and-spoke topology with segmentation.
+* **Terraform Automation** – IaC for networking, firewall, and private endpoints.
+* **Threat Detection with Sentinel** – custom KQL rules for segmentation violations.
+* **Incident Response Automation** – Logic Apps for remediation, escalation, enrichment.
+* **Security Analytics** – workbooks for compliance, segmentation posture, and violation trends.
+* **Portfolio Impact** – demonstrates ability to enforce **least privilege networking** and integrate detection, response, and visualization into a single Zero Trust workflow.
 
