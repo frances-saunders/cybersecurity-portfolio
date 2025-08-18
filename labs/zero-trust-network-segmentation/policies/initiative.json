@@ -1,0 +1,24 @@
+{
+  "properties": {
+    "displayName": "Zero Trust Network Segmentation Initiative",
+    "policyType": "Custom",
+    "description": "Ensure NSG enforcement, private endpoint usage, and restricted NSG rules across the environment.",
+    "metadata": {
+      "category": "Networking"
+    },
+    "policyDefinitions": [
+      {
+        "policyDefinitionReferenceId": "Deny-Subnet-Without-NSG",
+        "policyDefinitionId": "${policyResourceId}/deny-public-subnet"
+      },
+      {
+        "policyDefinitionReferenceId": "Enforce-Private-Endpoints",
+        "policyDefinitionId": "${policyResourceId}/enforce-private-endpoints"
+      },
+      {
+        "policyDefinitionReferenceId": "Restrict-NSG-Rules",
+        "policyDefinitionId": "${policyResourceId}/restrict-nsg-rules"
+      }
+    ]
+  }
+}
