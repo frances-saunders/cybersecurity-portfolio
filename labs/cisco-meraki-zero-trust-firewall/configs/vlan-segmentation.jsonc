@@ -1,0 +1,31 @@
+{
+  // VLAN segmentation aligned with Zero Trust principles
+  // Each VLAN is isolated by default; firewall rules define explicit access
+
+  "vlans": [
+    {
+      "id": 10,
+      "name": "Corporate",
+      "subnet": "10.10.10.0/24",
+      "applianceIp": "10.10.10.1"
+    },
+    {
+      "id": 20,
+      "name": "IoT",
+      "subnet": "10.10.20.0/24",
+      "applianceIp": "10.10.20.1"
+    },
+    {
+      "id": 30,
+      "name": "Guest",
+      "subnet": "10.10.30.0/24",
+      "applianceIp": "10.10.30.1"
+    },
+    {
+      "id": 40,
+      "name": "Management",
+      "subnet": "10.10.40.0/24",
+      "applianceIp": "10.10.40.1"
+    }
+  ]
+}
