@@ -1,0 +1,20 @@
+{
+  // GitHub repo roles - least privilege applied
+  "github_roles": {
+    "developer": ["read", "pull_request"],
+    "reviewer": ["read", "pull_request", "approve"],
+    "release_manager": ["read", "merge_pr", "tag_release"]
+  },
+
+  // Azure DevOps roles - scoped service connections
+  "azure_devops_roles": {
+    "build_agent_sp": {
+      "scope": "resource-group", // Never subscription-wide
+      "permissions": ["deploy_vm", "deploy_app_service"]
+    },
+    "pipeline_admin": {
+      "scope": "org-level",
+      "permissions": ["manage_pipelines"]
+    }
+  }
+}
