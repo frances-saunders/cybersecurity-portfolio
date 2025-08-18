@@ -1,0 +1,25 @@
+{
+  "properties": {
+    "displayName": "Enforce Private Endpoints for Storage & SQL",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "Require that Storage Accounts and SQL Servers only allow traffic via private endpoints.",
+    "policyRule": {
+      "if": {
+        "anyOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Storage/storageAccounts"
+          },
+          {
+            "field": "type",
+            "equals": "Microsoft.Sql/servers"
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
