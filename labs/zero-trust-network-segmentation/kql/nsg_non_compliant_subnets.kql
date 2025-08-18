@@ -1,0 +1,6 @@
+// Identify subnets without an associated Network Security Group (NSG)
+// Ensures every subnet is protected with explicit allow/deny rules
+AzureDiagnostics
+| where Category == "NetworkSecurityGroupEvent"
+| summarize NSGCount = dcount(Resource) by Subnet = tostring(properties["subnetName"])
+| where NSGCount == 0
