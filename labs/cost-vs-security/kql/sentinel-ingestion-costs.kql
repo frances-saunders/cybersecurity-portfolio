@@ -1,0 +1,15 @@
+// Sentinel Ingestion Costs by Table
+// This query calculates log ingestion costs per table over time.
+// Uses CostManagement data to correlate with Sentinel workspace metrics.
+// Demonstrates cost attribution to specific log types for optimization.
+
+CostManagementResources
+| where ResourceType == "microsoft.operationalinsights/workspaces"
+| extend ResourceName = tostring(properties["meterCategory"])
+| summarize TotalCost = sum(PreTaxCost) by bin(UsageDateTime, 1d), ResourceName
+| join kind=inner (
+    Usage
+    | summarize TotalGB = sum(Quantity) by bin(UsageDateTime, 1d), MeterCategory
+) on $left.ResourceName == $right.MeterCategory
+| project UsageDateTime, ResourceName, TotalGB, TotalCost
+| order by UsageDateTime asc
