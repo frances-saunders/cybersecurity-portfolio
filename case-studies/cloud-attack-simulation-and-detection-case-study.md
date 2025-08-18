@@ -1,4 +1,4 @@
-# Cloud Attack Simulation & Detection in Azure
+# Case Study: Cloud Attack Simulation & Detection in Azure
 
 ## Problem / Challenge
 
