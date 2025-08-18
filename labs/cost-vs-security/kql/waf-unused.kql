@@ -1,0 +1,11 @@
+// Unused WAF Instances
+// Finds WAF instances that have zero inbound traffic over last 30 days.
+// Highlights waste where WAF is deployed but not actively protecting workloads.
+
+AzureDiagnostics
+| where ResourceType == "APPLICATIONGATEWAYS"
+| where Category == "ApplicationGatewayAccessLog"
+| summarize TotalRequests = count() by ResourceId, bin(TimeGenerated, 30d)
+| summarize Requests = sum(TotalRequests) by ResourceId
+| where Requests == 0
+| project ResourceId, Requests
