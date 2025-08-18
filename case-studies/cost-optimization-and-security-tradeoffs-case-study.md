@@ -15,10 +15,8 @@ This required a solution that combined **technical rigor** (data pipelines, poli
 
 ---
 
-## Role & Tools
-
-**Role:** Cloud Security Administrator (Strategic Advisor to CISO)  
-**Tools & Technologies:** Microsoft Sentinel, KQL, Azure Cost Management APIs, Defender for Cloud, Azure Policy, Logic Apps, Azure Monitor Workbooks
+## Tools & Technologies
+Microsoft Sentinel, KQL, Azure Cost Management APIs, Defender for Cloud, Azure Policy, Logic Apps, Azure Monitor Workbooks
 
 ---
 
