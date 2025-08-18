@@ -1,7 +1,3 @@
-Perfect — thanks for sharing that example. Here’s the **Zero Trust Network Segmentation Lab README** rewritten to follow the exact same format and tone as your other labs (with Overview → Objectives → Directory Structure → Deployment Steps → Skills Demonstrated).
-
----
-
 # Zero Trust Network Segmentation Lab
 
 ## Overview
