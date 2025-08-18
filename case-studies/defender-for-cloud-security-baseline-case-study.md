@@ -14,10 +14,8 @@ The challenge was to enforce a **Defender for Cloud baseline** that guaranteed c
 
 ---
 
-## Role & Tools
-
-**Role:** Cloud Admin / Security Lead (solo project)  
-**Tools & Technologies:** Azure Policy, Microsoft Defender for Cloud, Terraform, PowerShell
+## Tools & Technologies
+Azure Policy, Microsoft Defender for Cloud, Terraform, PowerShell
 
 ---
 
