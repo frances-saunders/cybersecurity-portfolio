@@ -1,0 +1,70 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "userPrincipalName": {
+      "type": "string",
+      "metadata": { "description": "UPN from Sentinel incident" }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2019-05-01",
+      "name": "respond-impossible-travel",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "definition": {
+          "actions": {
+            "Disable_User": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": { "connection": { "name": "@parameters('$connections')['azuread']['connectionId']" } },
+                "method": "post",
+                "path": "/users/@{encodeURIComponent(triggerBody()?['userPrincipalName'])}/disable"
+              },
+              "runAfter": {}
+            },
+            "Notify_Teams": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": { "connection": { "name": "@parameters('$connections')['teams']['connectionId']" } },
+                "method": "post",
+                "path": "/messages",
+                "body": {
+                  "text": "Impossible Travel detected for user: @{triggerBody()?['userPrincipalName']}. Account has been disabled."
+                }
+              },
+              "runAfter": { "Disable_User": [ "Succeeded" ] }
+            },
+            "Create_ServiceNow_Ticket": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": { "connection": { "name": "@parameters('$connections')['servicenow']['connectionId']" } },
+                "method": "post",
+                "path": "/incident",
+                "body": {
+                  "short_description": "Impossible Travel Security Incident",
+                  "description": "User @{triggerBody()?['userPrincipalName']} disabled due to impossible travel detection."
+                }
+              },
+              "runAfter": { "Notify_Teams": [ "Succeeded" ] }
+            }
+          },
+          "triggers": {
+            "When_Sentinel_Incident_Created": {
+              "type": "Request",
+              "kind": "Http",
+              "inputs": {
+                "schema": {
+                  "properties": { "userPrincipalName": { "type": "string" } },
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
