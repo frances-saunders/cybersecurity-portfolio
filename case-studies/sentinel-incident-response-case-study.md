@@ -13,10 +13,8 @@ These challenges increase attacker dwell time, reduce analyst efficiency, and le
 
 ---
 
-## Role & Tools
-
-**Role:** Cloud Security Administrator  
-**Tools & Technologies:** Microsoft Sentinel, KQL, Logic Apps (Playbooks), Terraform, Azure Workbooks
+## Tools & Technologies
+Microsoft Sentinel, KQL, Logic Apps (Playbooks), Terraform, Azure Workbooks
 
 ---
 
