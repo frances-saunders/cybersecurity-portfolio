@@ -13,10 +13,8 @@ The organization needed a **Conditional Access (CA) baseline** that reduced iden
 
 ---
 
-## Role & Tools
-
-**Role:** Azure Administrator / Security Engineer (solo project)
-**Tools & Technologies:** Microsoft Entra ID (Azure AD) Conditional Access, Azure Policy (initiatives and assignments), Microsoft Security Benchmark, NIST SP 800-53, CIS Controls v8
+## Tools & Technologies
+Microsoft Entra ID (Azure AD) Conditional Access, Azure Policy (initiatives and assignments), Microsoft Security Benchmark, NIST SP 800-53, CIS Controls v8
 
 ---
 
