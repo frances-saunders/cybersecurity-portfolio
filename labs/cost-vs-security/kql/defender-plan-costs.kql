@@ -1,0 +1,9 @@
+// Defender for Cloud Plan Costs by Environment
+// Groups Defender plan costs by environment tag (prod, dev, test).
+// Helps identify where expensive plans are applied unnecessarily.
+
+CostManagementResources
+| where ResourceType == "microsoft.security/pricings"
+| extend Env = tostring(tags["environment"])
+| summarize MonthlyCost = sum(PreTaxCost) by Env, PricingTier, bin(UsageDateTime, 30d)
+| order by MonthlyCost desc
