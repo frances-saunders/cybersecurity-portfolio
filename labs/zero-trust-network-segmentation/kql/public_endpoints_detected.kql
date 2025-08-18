@@ -1,0 +1,11 @@
+// Detect resources exposed to the public internet without private endpoints
+// Ensures Zero Trust by requiring private/service endpoints
+AzureActivity
+| where OperationNameValue in ("Microsoft.Network/publicIPAddresses/write", "Microsoft.Network/virtualNetworkGateways/write")
+| extend ResourceId = tostring(parse_json(Properties).resourceId)
+| join kind=leftanti (
+    ResourceContainers
+    | where type =~ "microsoft.network/privateendpoints"
+    | project PrivateEndpointId = id
+) on $left.ResourceId == $right.PrivateEndpointId
+| project TimeGenerated, ResourceId, Caller, ActivityStatusValue
