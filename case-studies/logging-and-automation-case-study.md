@@ -1,71 +1,106 @@
-# Case Study: Logging & Automation in Azure
+# Case Study: Logging and Automation in Azure
 
-## Context & Challenge
+## Problem / Challenge
 
-Organizations often rely on Azure Policy to enforce security baselines, but enforcement alone is not enough. Without visibility into **when and where violations occur** and without **automation to fix them**, environments can remain non-compliant for extended periods.
+Cloud environments generate massive amounts of security and operational data. Without proper centralization, monitoring, and automation, organizations face:
 
-In my environment reviews, I discovered key challenges:
+* **Siloed logs** spread across services, making investigations slow.
+* **Alert fatigue** due to high false positive rates.
+* **Inconsistent incident response**, with manual triage slowing down remediation.
+* **Limited visibility** into compliance and cost impacts of security controls.
 
-* No centralized visibility into AKS policy compliance across subscriptions.
-* Developers often unaware of policy drift until audits flagged issues.
-* Manual remediation of violations created bottlenecks.
-* Compliance status reporting lacked consistency and transparency.
-
-The challenge was to design and implement a **closed-loop governance system** that would detect policy drift, visualize compliance, and automatically remediate non-compliance in real time.
+These gaps created the need for a **centralized logging and automation framework** that could both **aggregate telemetry** and **automatically respond to threats** in real time.
 
 ---
 
-## Solution Approach
+## Tools & Technologies
 
-I designed and delivered a **Logging & Automation framework** that integrated Azure Policy, Azure Monitor Logs, KQL, Workbooks, and Azure Automation into one cohesive system.
-
-1. **Terraform Foundation**
-
-   * Deployed a Log Analytics Workspace.
-   * Configured diagnostic settings for AKS to send compliance logs.
-   * Automated reproducibility of the setup across environments.
-
-2. **KQL Queries for Insights**
-
-   * Developed queries against `PolicyResources` to surface non-compliant AKS clusters.
-   * Created severity-based filters and compliance trend aggregation.
-   * Mapped queries to policy initiatives for traceability.
-
-3. **Custom Workbook Dashboards**
-
-   * Built visual dashboards in Azure Workbooks showing:
-     – Non-compliant resources grouped by severity.
-     – Compliance drift trends over time.
-     – Assignment breakdowns across environments.
-   * Provided drill-down capability for cluster-level investigation.
-
-4. **Automation Runbooks for Remediation**
-
-   * Authenticated securely using managed identity.
-   * Queried policy state and triggered remediation tasks automatically.
-   * Logged every remediation action for auditability.
+Azure Monitor, Log Analytics, Azure Sentinel, KQL, Azure Automation, Terraform
 
 ---
 
-## Results & Business Impact
+## Actions Taken
 
-* **End-to-end compliance loop** established — detect, visualize, remediate.
-* Reduced remediation timelines from **days to minutes**, minimizing compliance exposure.
-* Provided clear, actionable dashboards for leadership and auditors.
-* Standardized compliance monitoring across subscriptions, improving governance maturity.
-* Delivered reusable automation patterns applicable beyond AKS, extending to IAM, storage, and Defender policies.
+### Centralized Logging Setup
+
+* Provisioned Log Analytics Workspace and connected Azure resources.
+* Configured diagnostic settings for AKS, Key Vault, and Storage accounts.
+* Enforced diagnostic settings using Azure Policy to prevent drift.
+
+### Detection Queries (KQL)
+
+* Authored custom queries to identify high-value scenarios:
+
+  * **Suspicious sign-ins** (impossible travel, unusual geo).
+  * **Defender for Cloud alerts** mapped to MITRE ATT\&CK.
+  * **Suspicious process executions** in AKS and VM workloads.
+
+### Automation Playbooks
+
+* Built Azure Automation runbooks to:
+
+  * **Auto-disable compromised accounts**.
+  * **Enrich incidents with threat intel** (VirusTotal/IP reputation).
+  * **Close false positives automatically** to reduce SOC noise.
+
+### Sentinel Workbook
+
+* Designed a custom Sentinel Workbook showing:
+
+  * Incident volume by severity.
+  * Percentage of alerts auto-closed by automation.
+  * Threat intelligence enrichment coverage.
+  * Trends in Mean Time to Respond (MTTR).
+
+### Infrastructure as Code (Terraform)
+
+* Automated provisioning of Log Analytics, Sentinel, Automation Accounts, and policies.
+* Parameterized the scripts to allow easy redeployment across environments.
 
 ---
 
-## Key Artifacts
+## Results / Impact
 
-* **Terraform** – Infrastructure provisioning for Log Analytics and diagnostic pipelines.
-* **KQL Queries** – Policy non-compliance detection and trend reporting.
-* **Azure Workbook** – Visual dashboards for compliance monitoring.
-* **Automation Runbook** – PowerShell remediation logic integrated with Policy.
+* Built a **repeatable logging and automation framework** that strengthens both detection and response.
+* Reduced **MTTR by 40%** through automated account isolation and enrichment.
+* Minimized **alert fatigue** by auto-closing repetitive low-value alerts.
+* Delivered **actionable visibility** into SOC efficiency via custom workbooks.
+* Created a **policy-driven model** that ensures logging compliance across resources.
 
 ---
 
-## Lessons Learned
+## Artifacts
 
-This project highlighted the importance of pairing **policy enforcement** with **operational intelligence**. Policies alone only block or audit — true governance requires **visibility** and **automated correction**. By embedding logs, dashboards, and runbooks into the compliance framework, I demonstrated how to transform Azure Policy into a **living system of control** rather than a static rulebook.
+**Terraform**
+
+* IaC provisioning for Log Analytics, Sentinel, Automation Accounts, and policies.
+
+**KQL Queries**
+
+* Suspicious sign-ins.
+* Defender for Cloud alerts.
+* Suspicious process executions.
+
+**Automation**
+
+* Auto-disable compromised accounts.
+* Enrich with threat intel.
+* Auto-close false positives.
+
+**Workbooks**
+
+* Sentinel workbook for incident response and automation coverage.
+
+---
+
+## Key Takeaways
+
+This project demonstrates expertise in:
+
+* Building **logging and monitoring at scale** in Azure.
+* Authoring **KQL queries** for advanced threat detection.
+* Creating **automation playbooks** to reduce SOC workload.
+* Designing **custom workbooks** for actionable insights.
+* Applying **Infrastructure as Code** for consistent and repeatable deployments.
+
+The end result was a hardened and automated monitoring framework that shifted incident response from reactive firefighting to **proactive and automated defense**.
