@@ -1,0 +1,59 @@
+{
+  // Identity-based group policies linked to SAML/AD roles
+  // Ensures access decisions are based on user identity, not just IP
+
+  "policies": [
+    {
+      "name": "Admin",
+      "comment": "Full access across Corporate and Management VLANs",
+      "allowedVlans": ["Corporate", "Management"],
+      "firewallRules": [
+        {
+          "policy": "allow",
+          "protocol": "any",
+          "destCidr": "any",
+          "destPort": "any"
+        }
+      ]
+    },
+    {
+      "name": "Employee",
+      "comment": "Standard users – Corporate VLAN only, restricted outbound",
+      "allowedVlans": ["Corporate"],
+      "firewallRules": [
+        {
+          "policy": "allow",
+          "protocol": "tcp",
+          "destCidr": "any",
+          "destPort": "80,443"
+        }
+      ]
+    },
+    {
+      "name": "IoT-Device",
+      "comment": "IoT devices – restricted to cloud telemetry only",
+      "allowedVlans": ["IoT"],
+      "firewallRules": [
+        {
+          "policy": "allow",
+          "protocol": "tcp",
+          "destCidr": "52.239.0.0/16",
+          "destPort": "443"
+        }
+      ]
+    },
+    {
+      "name": "Guest",
+      "comment": "Guests – Internet only, no internal access",
+      "allowedVlans": ["Guest"],
+      "firewallRules": [
+        {
+          "policy": "allow",
+          "protocol": "tcp",
+          "destCidr": "any",
+          "destPort": "80,443"
+        }
+      ]
+    }
+  ]
+}
