@@ -1,0 +1,25 @@
+{
+  "properties": {
+    "displayName": "Deny Subnets Without NSG",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "Ensure all subnets are associated with an NSG to enforce Zero Trust segmentation.",
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Network/virtualNetworks/subnets"
+          },
+          {
+            "field": "Microsoft.Network/virtualNetworks/subnets/networkSecurityGroup.id",
+            "exists": "false"
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
