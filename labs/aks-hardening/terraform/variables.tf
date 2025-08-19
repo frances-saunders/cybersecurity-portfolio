@@ -63,6 +63,25 @@ variable "log_analytics_workspace_id" {
 }
 
 // -----------------------------
+// Authentication
+// -----------------------------
+variable "admin_username" {
+  description = "Admin username for AKS nodes"
+  type        = string
+}
+
+variable "ssh_public_key" {
+  description = "SSH public key for AKS admin access"
+  type        = string
+}
+
+variable "aks_admin_password" {
+  description = "Admin password for AKS nodes (stored securely in Key Vault)"
+  type        = string
+  sensitive   = true
+}
+
+// -----------------------------
 // Policy Parameters
 // -----------------------------
 variable "privileged_effect" {
