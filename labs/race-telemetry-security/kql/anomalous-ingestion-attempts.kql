@@ -1,0 +1,11 @@
+// Detect anomalous Event Hub ingestion attempts
+// Logic: Identify connections to Event Hubs from IPs outside trusted subnets.
+// Security value: Highlights possible attackers injecting fake telemetry.
+
+AzureDiagnostics
+| where ResourceType == "EVENTHUBNAMESPACES"
+| where OperationName == "Send"
+| extend ClientIP = tostring(parse_json(Properties_s).clientIp)
+| where ClientIP !in ("10.50.1.0/24", "10.0.0.0/8")
+| summarize Attempts = count() by ClientIP, bin(TimeGenerated, 5m)
+| order by Attempts desc
