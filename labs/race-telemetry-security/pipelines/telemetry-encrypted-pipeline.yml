@@ -1,10 +1,6 @@
 # Race Telemetry Secure Pipeline
 # ------------------------------
-# This simulates a SaaS-style pipeline that:
-# 1. Ingests raw car telemetry into Event Hub
-# 2. Writes processed data securely into Cosmos DB
-# 3. Archives event batches into Azure SQL
-# All secrets are pulled from Key Vault, never hardcoded.
+# Secrets are pulled from Key Vault, never echoed or hardcoded.
 
 trigger: none
 
@@ -15,8 +11,7 @@ stages:
         steps:
           - script: |
               echo "Simulating live race telemetry ingestion..."
-              python ingest_telemetry.py \
-                --eventhub $EVENTHUB_CONNSTRING
+              python ingest_telemetry.py --eventhub "$EVENTHUB_CONNSTRING"
             env:
               EVENTHUB_CONNSTRING: $(keyVault.eventhubConnection)
 
@@ -25,10 +20,8 @@ stages:
       - job: ProcessCosmos
         steps:
           - script: |
-              echo "Processing and inserting telemetry into Cosmos DB..."
-              python process_to_cosmos.py \
-                --cosmos-uri $COSMOS_URI \
-                --cosmos-key $COSMOS_KEY
+              echo "Processing telemetry and inserting into Cosmos DB..."
+              python process_to_cosmos.py --cosmos-uri "$COSMOS_URI" --cosmos-key "***"
             env:
               COSMOS_URI: $(keyVault.cosmosUri)
               COSMOS_KEY: $(keyVault.cosmosKey)
@@ -39,11 +32,7 @@ stages:
         steps:
           - script: |
               echo "Archiving telemetry into Azure SQL..."
-              python archive_sql.py \
-                --server $SQL_SERVER \
-                --db $SQL_DB \
-                --user $SQL_USER \
-                --password $SQL_PASS
+              python archive_sql.py --server "$SQL_SERVER" --db "$SQL_DB" --user "$SQL_USER" --password "***"
             env:
               SQL_SERVER: $(keyVault.sqlServer)
               SQL_DB: $(keyVault.sqlDB)
