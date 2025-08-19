@@ -14,10 +14,8 @@ The challenge was to design and enforce a **Defender for Cloud baseline** that e
 
 ---
 
-## Role & Tools
-
-**Role:** Cloud Admin / Security Lead (solo project)  
-**Tools & Technologies:** Azure Policy, Microsoft Defender for Cloud, Log Analytics, Terraform, PowerShell
+## Tools & Technologies
+Azure Policy, Microsoft Defender for Cloud, Log Analytics, Terraform, PowerShell
 
 ---
 
