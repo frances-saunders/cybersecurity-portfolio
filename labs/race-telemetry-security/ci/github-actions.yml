@@ -1,0 +1,37 @@
+# GitHub Actions pipeline example for secure secret retrieval
+# ==========================================================
+# Demonstrates how to integrate Azure Key Vault with telemetry infra deployment.
+# Uses the PowerShell/Bash scripts provided in scripts/.
+# ==========================================================
+
+name: Deploy Race Telemetry Lab
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          # Stored securely in GitHub → Settings → Secrets and variables
+
+      - name: Retrieve SQL Admin Password (from Key Vault)
+        run: |
+          chmod +x labs/race-telemetry-security/scripts/get-sql-password.sh
+          SQL_ADMIN_PASSWORD=$(labs/race-telemetry-security/scripts/get-sql-password.sh)
+          echo "SQL_ADMIN_PASSWORD retrieved securely"
+        shell: bash
+
+      - name: Terraform Init & Apply
+        working-directory: labs/race-telemetry-security/terraform
+        run: |
+          terraform init
+          terraform apply -auto-approve \
+            -var "sql_admin_password=$SQL_ADMIN_PASSWORD"
