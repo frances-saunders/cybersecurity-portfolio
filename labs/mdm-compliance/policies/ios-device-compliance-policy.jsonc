@@ -1,0 +1,33 @@
+{
+  // =====================================================
+  // iOS/iPadOS – High Security Compliance Policy
+  // Enforces Apple MDM best practices and Zero Trust access
+  // =====================================================
+
+  "@odata.type": "#microsoft.graph.iosCompliancePolicy",
+
+  // Metadata
+  "displayName": "iOS/iPadOS – High Security Compliance Policy",
+  "description": "Compliance policy requiring passcode, encryption, OS version, and jailbreak detection.",
+
+  // ---------------------------
+  // Device Security
+  // ---------------------------
+  "passcodeRequired": true,             // Require passcode for all devices
+  "passcodeMinimumLength": 6,
+  "passcodeRequiredType": "alphanumeric", // Require alphanumeric PIN
+  "passcodeMinutesOfInactivityBeforeLock": 5,
+  "passcodeExpirationDays": 90,
+  "passcodePreviousPasscodeBlockCount": 5,
+
+  "securityBlockJailbrokenDevices": true, // Block jailbroken/rooted devices
+  "osMinimumVersion": "16.0",             // Require iOS/iPadOS 16 or newer
+  "osMaximumVersion": "18.0",
+
+  // ---------------------------
+  // Device Encryption
+  // ---------------------------
+  "managedEmailProfileRequired": true,   // Require managed mail profile for encryption
+  "deviceThreatProtectionEnabled": true, // Integrates with Defender for Endpoint iOS
+  "deviceThreatProtectionRequiredSecurityLevel": "secured"
+}
