@@ -1,4 +1,4 @@
-# Cost Optimization and Security Tradeoffs in Azure
+# Case Study: Cost Optimization and Security Tradeoffs in Azure
 
 ## Problem / Challenge
 
