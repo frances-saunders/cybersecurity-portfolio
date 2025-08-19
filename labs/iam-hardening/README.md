@@ -14,10 +14,8 @@ The challenge was to design and enforce an **IAM Hardening baseline** that ensur
 
 ---
 
-## Role & Tools
-
-**Role:** Cloud Admin / Security Lead (solo project)  
-**Tools & Technologies:** Azure Policy, Azure Active Directory, Log Analytics, Terraform
+## Tools & Technologies
+Azure Policy, Azure Active Directory, Log Analytics, Terraform
 
 ---
 
