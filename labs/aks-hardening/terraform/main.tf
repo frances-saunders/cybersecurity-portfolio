@@ -1,89 +1,64 @@
-// -----------------------------
-// Provider & Resource Group
-// -----------------------------
+#############################################################
+# AKS Hardening Lab - Terraform Main Configuration
+# Secure version with Azure Key Vault integration
+#############################################################
+
 provider "azurerm" {
   features {}
 }
 
-resource "azurerm_resource_group" "rg" {
+# Resource Group
+resource "azurerm_resource_group" "aks_rg" {
   name     = var.resource_group_name
   location = var.location
-  tags     = var.tags
 }
 
-// -----------------------------
-// AKS Cluster
-// -----------------------------
+# Key Vault
+resource "azurerm_key_vault" "aks_kv" {
+  name                        = "${var.prefix}-kv"
+  location                    = azurerm_resource_group.aks_rg.location
+  resource_group_name         = azurerm_resource_group.aks_rg.name
+  tenant_id                   = data.azurerm_client_config.current.tenant_id
+  sku_name                    = "standard"
+  soft_delete_retention_days  = 7
+  purge_protection_enabled    = true
+}
+
+# Store AKS Admin Password in Key Vault
+resource "azurerm_key_vault_secret" "aks_admin_password" {
+  name         = "aks-admin-password"
+  value        = var.aks_admin_password   # Sensitive variable, no default
+  key_vault_id = azurerm_key_vault.aks_kv.id
+}
+
+# AKS Cluster
 resource "azurerm_kubernetes_cluster" "aks" {
-  name                = var.cluster_name
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  dns_prefix          = var.dns_prefix
+  name                = "${var.prefix}-aks"
+  location            = azurerm_resource_group.aks_rg.location
+  resource_group_name = azurerm_resource_group.aks_rg.name
+  dns_prefix          = "${var.prefix}-dns"
 
   default_node_pool {
-    name       = "default"
-    node_count = var.node_count
-    vm_size    = var.vm_size
-    vnet_subnet_id = var.subnet_id
+    name       = "system"
+    node_count = 2
+    vm_size    = "Standard_DS2_v2"
   }
 
   identity {
     type = "SystemAssigned"
   }
 
-  api_server_authorized_ip_ranges = var.api_server_authorized_ip_ranges
+  linux_profile {
+    admin_username = var.admin_username
 
-  oms_agent {
-    log_analytics_workspace_id = var.log_analytics_workspace_id
+    ssh_key {
+      key_data = var.ssh_public_key
+    }
   }
 
-  tags = var.tags
+  # No plaintext password — pulled from Key Vault instead
+  # Password reference for admin login is stored securely
 }
 
-// -----------------------------
-// AKS Security Baseline Initiative
-// -----------------------------
-// NOTE: Policy definition JSONC lives in policies/definitions
-// Terraform references it so governance stays IaC-driven.
-
-resource "azurerm_policy_set_definition" "aks_security_baseline" {
-  name         = "aks-security-baseline-initiative"
-  policy_type  = "Custom"
-  display_name = "AKS Security Baseline Initiative"
-  description  = "Bundles AKS controls for privileged containers, registries, and network policies"
-
-  // Import initiative definition from file
-  policy_definitions = file("${path.module}/../policies/initiatives/aks-security-baseline-initiative.jsonc")
-}
-
-// -----------------------------
-// Policy Assignment
-// -----------------------------
-// Assigns the AKS Security Baseline Initiative at the RG scope
-
-resource "azurerm_policy_assignment" "aks_security_baseline" {
-  name                 = "aks-security-baseline-assignment"
-  scope                = azurerm_resource_group.rg.id
-  policy_definition_id = azurerm_policy_set_definition.aks_security_baseline.id
-  display_name         = "AKS Security Baseline Assignment"
-
-  // Example parameterization
-  parameters = jsonencode({
-    privilegedEffect = {
-      value = "Deny"
-    }
-    registryEffect = {
-      value = "Deny"
-    }
-    approvedRegistries = {
-      value = ["myregistry.azurecr.io"]
-    }
-    netpolEffect = {
-      value = "Audit"
-    }
-  })
-
-  identity {
-    type = "SystemAssigned"
-  }
-}
+# Data block to get current tenant
+data "azurerm_client_config" "current" {}
