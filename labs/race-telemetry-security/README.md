@@ -2,22 +2,21 @@
 
 ## Overview
 
-This lab demonstrates how to secure **race telemetry systems** by protecting the ingestion, processing, and storage of high-frequency car sensor data.  
-The pipeline is recreated using **Azure Event Hubs**, **encrypted SaaS analytics pipelines**, and **Azure Storage** — with layered security controls to enforce confidentiality, integrity, and availability.
+This lab demonstrates how to securely ingest **live race telemetry data** into Azure using **Event Hubs**, with storage in **Cosmos DB** and **Azure SQL Database**, all protected by **Key Vault–integrated secret management**. The lab also includes **Terraform infrastructure-as-code**, **secure CI/CD pipelines**, **KQL queries for monitoring anomalies**, and **Azure Policies** to enforce encryption.
 
-The artifacts showcase how to build a Zero Trust data streaming architecture suitable for motorsports environments where **low latency, high throughput, and strict data protection** are mission critical.
+The goal is to showcase how sensitive telemetry can be ingested, stored, and monitored securely in Azure while adhering to **Zero Trust principles** and DevSecOps practices.
 
 ---
 
 ## Lab Objectives
 
-* Deploy an **Event Hubs namespace** with **private endpoints** for secure telemetry ingestion.  
-* Enforce **Azure Policy** to require encryption in transit and at rest.  
-* Integrate **Azure Key Vault** for key management across Event Hubs and Storage.  
-* Implement **NSG and Firewall rules** to isolate telemetry flows from external networks.  
-* Secure an **Azure Data Explorer (ADX) / SaaS analytics pipeline** with **managed identities** and **encrypted pipelines**.  
-* Enable **diagnostic logs** for auditing and detection of anomalous telemetry ingestion.  
-* Build a **Sentinel workbook** to monitor ingestion volume, dropped events, and anomalous sources.  
+* Deploy a **telemetry ingestion architecture** with Event Hubs, Cosmos DB, and SQL Database.  
+* Ingest live data streams securely, ensuring all pipelines are encrypted.  
+* Use **Azure Key Vault** for secret storage (no plaintext in scripts or Terraform).  
+* Demonstrate **Terraform IaC** with secure defaults.  
+* Provide **CI/CD pipelines** (GitHub Actions + Azure DevOps) that pull secrets from Key Vault.  
+* Create **KQL detection queries** for anomaly detection and dropped events.  
+* Apply **Azure Policies** to enforce encryption and endpoint protection.  
 
 ---
 
@@ -25,67 +24,120 @@ The artifacts showcase how to build a Zero Trust data streaming architecture sui
 
 ```plaintext
 labs/race-telemetry-security/
-├── terraform/
-│   ├── main.tf
-│   ├── variables.tf
-│   ├── outputs.tf
-│   └── terraform.tfvars
-│
-├── policies/
-│   └── enforce-encryption-eventhubs.json
-│
-├── pipelines/
-│   └── telemetry-encrypted-pipeline.yml
+├── ci/
+│   ├── azure-pipelines.yml             # Secure Azure DevOps pipeline
+│   └── github-actions.yml              # Secure GitHub Actions workflow
 │
 ├── kql/
 │   ├── anomalous-ingestion-attempts.kql
 │   └── dropped-events-trend.kql
 │
-└── workbooks/
-    └── telemetry-security-overview.jsonc
+├── pipelines/
+│   └── telemetry-encrypted-pipeline.jsonc
+│
+├── policies/
+│   └── enforce-encryption-eventhub.json
+│
+├── scripts/
+│   ├── get-sql-password.ps1            # PowerShell – fetch secrets at runtime
+│   └── get-sql-password.sh             # Bash – fetch secrets at runtime
+│
+├── terraform/
+│   ├── main.tf
+│   ├── outputs.tf
+│   ├── terraform.tfvars
+│   └── variables.tf
+│
+├── keyvault/
+│   └── keyvault-setup.tf               # Key Vault provisioning & secrets
+│
+└── README.md
 ````
 
 ---
 
 ## Deployment Steps
 
-### 1. Infrastructure (Terraform)
+### 1. Terraform Infrastructure
 
-Deploy the Event Hubs namespace, VNet, subnets, private endpoints, and storage accounts via `terraform/`.
-All resources are encrypted with **customer-managed keys** from Key Vault.
+1. Navigate to `terraform/` and run:
 
-### 2. Policy Enforcement
+   ```bash
+   terraform init
+   terraform apply -auto-approve
+   ```
+2. Resources created:
 
-Apply the policy in `policies/enforce-encryption-eventhubs.json` to ensure telemetry ingestion is **always encrypted at rest and in transit**.
-Any attempt to deploy insecure Event Hub namespaces will be denied.
+   * Event Hub Namespace + Event Hub
+   * Cosmos DB + SQL Database
+   * VNet, Subnets, NSGs
+   * Key Vault
 
-### 3. Secure Pipeline
+---
 
-Use the `pipelines/telemetry-encrypted-pipeline.yml` definition to simulate a SaaS analytics pipeline:
+### 2. Key Vault Setup
 
-* Secrets retrieved dynamically from **Key Vault**.
-* Telemetry streamed from Event Hub → Analytics → Storage.
-* Encryption enforced for every hop.
+1. Navigate to `keyvault/` and run:
 
-### 4. Monitoring
+   ```bash
+   terraform init
+   terraform apply -auto-approve
+   ```
+2. This will:
 
-Deploy the workbook in `workbooks/telemetry-security-overview.jsonc` to Microsoft Sentinel.
-It visualizes telemetry flow, anomalous sources, and dropped events.
+   * Create a Key Vault
+   * Add access policies for the deploying identity
+   * Store secrets (`sql-admin-password`, `cosmos-primary-key`)
 
-Run the detection queries in `kql/` to identify:
+---
 
-* Suspicious ingestion attempts from unauthorized IPs.
-* Unusual drops in event throughput (potential DoS or misconfig).
+### 3. Scripts
+
+* `scripts/get-sql-password.ps1` → retrieves SQL password from Key Vault for Windows-based automation.
+* `scripts/get-sql-password.sh` → retrieves SQL password from Key Vault for Linux-based automation.
+
+---
+
+### 4. CI/CD Pipelines
+
+* `ci/github-actions.yml` – Secure workflow with Key Vault integration for GitHub.
+* `ci/azure-pipelines.yml` – Secure Azure DevOps pipeline using service connections.
+
+Both pipelines demonstrate **runtime retrieval of secrets** with no secrets in source control.
+
+---
+
+### 5. Policies
+
+* `policies/enforce-encryption-eventhub.json` ensures Event Hub messages are encrypted in transit and at rest.
+
+---
+
+### 6. KQL Queries
+
+* `anomalous-ingestion-attempts.kql` – Detects suspicious ingestion attempts.
+* `dropped-events-trend.kql` – Identifies telemetry data loss patterns.
+
+---
+
+## Tools & Technologies Used
+
+* **Azure Event Hubs** – high-volume telemetry ingestion
+* **Cosmos DB / SQL Database** – secure data persistence
+* **Azure Key Vault** – centralized secret storage
+* **Terraform** – infrastructure automation with secure defaults
+* **Azure Policies** – enforce encryption and secure configs
+* **KQL** – advanced telemetry anomaly detection
+* **GitHub Actions & Azure DevOps** – secure CI/CD with Key Vault integration
 
 ---
 
 ## Skills Demonstrated
 
-* **Event-Driven Security** – protecting high-volume telemetry with Event Hubs and Azure Policy.
-* **Key Management** – enforcing customer-managed keys and secretless pipelines with Key Vault.
-* **Zero Trust Networking** – private endpoints, NSGs, and firewall isolation.
-* **DevSecOps Integration** – secure SaaS pipelines with managed identities and YAML-based definitions.
-* **Threat Detection & Monitoring** – Sentinel KQL queries and workbooks for real-time telemetry security.
-* **Portfolio Impact** – demonstrates ability to secure **mission-critical, latency-sensitive telemetry systems**, bridging motorsports operations and enterprise security engineering.
+* **Cloud Security Architecture** – Secure telemetry ingestion pipeline.
+* **DevSecOps** – CI/CD with secure secret management.
+* **Infrastructure as Code (IaC)** – Automated, repeatable deployments.
+* **Detection Engineering** – Custom KQL queries for anomaly detection.
+* **Zero Trust Security** – No plaintext secrets, enforced encryption, secure data flows.
 
 ```
