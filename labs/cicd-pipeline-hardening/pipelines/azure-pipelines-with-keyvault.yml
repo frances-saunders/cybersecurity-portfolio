@@ -21,5 +21,10 @@ stages:
               RunAsPreJob: true
           - script: |
               echo "Using secret in pipeline runtime..."
-              echo "DB_PASSWORD=$(DB-PASSWORD)"
+              # Safely reference secret without printing its value
+              if [ -n "$DB_PASSWORD" ]; then
+                echo "Secret retrieved successfully."
+              else
+                echo "Secret not found."
+              fi
             displayName: "Consume Secrets"
