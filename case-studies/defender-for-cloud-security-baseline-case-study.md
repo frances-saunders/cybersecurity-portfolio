@@ -1,4 +1,4 @@
-# Microsoft Defender for Cloud Security Baseline
+# Case Study: Microsoft Defender for Cloud Security Baseline
 
 ## Problem / Challenge
 
