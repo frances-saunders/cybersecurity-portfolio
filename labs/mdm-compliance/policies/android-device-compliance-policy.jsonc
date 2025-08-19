@@ -1,0 +1,63 @@
+{
+  // =====================================================
+  // Android – High Security Compliance Policy
+  // Demonstrates MDM best practices with Intune
+  // =====================================================
+
+  "@odata.type": "#microsoft.graph.androidCompliancePolicy",
+
+  // Metadata
+  "displayName": "Android – High Security Compliance Policy",
+  "description": "Compliance policy enforcing encryption, password strength, OS version, and jailbreak/root detection.",
+
+  // ---------------------------
+  // Password & Lock Settings
+  // ---------------------------
+  "passwordRequired": true,
+  "passwordMinimumLength": 8,
+  "passwordRequiredType": "alphanumeric",    // Require complex passwords
+  "passwordMinutesOfInactivityBeforeLock": 5, // Auto-lock after 5 mins
+  "passwordExpirationDays": 90,              // Force rotation every 90 days
+  "passwordPreviousPasswordBlockCount": 5,   // Prevent reuse of last 5
+
+  // ---------------------------
+  // Device Security
+  // ---------------------------
+  "storageRequireEncryption": true,          // Enforce storage encryption
+  "deviceThreatProtectionEnabled": true,     
+  "deviceThreatProtectionRequiredSecurityLevel": "secured", // Require Defender ATP / Play Protect
+  "securityBlockJailbrokenDevices": true,    // Block rooted/jailbroken devices
+
+  // ---------------------------
+  // OS Version Controls
+  // ---------------------------
+  "osMinimumVersion": "12.0", // Require Android 12 or higher
+  "osMaximumVersion": "15.0", // Block unsupported future builds
+
+  // ---------------------------
+  // Restricted Applications
+  // ---------------------------
+  "restrictedApps": [
+    {
+      "appId": "com.example.riskyapp",
+      "name": "Risky App" // Example blocked application
+    }
+  ],
+
+  // ---------------------------
+  // Device Health Attestation
+  // ---------------------------
+  "requireHealthyDeviceReport": true,
+  "requireSafetyNetAttestationBasicIntegrity": true,
+  "requireSafetyNetAttestationCertifiedDevice": true,
+
+  // ---------------------------
+  // Valid OS Build Ranges
+  // ---------------------------
+  "validOperatingSystemBuildRanges": [
+    {
+      "minimumBuildNumber": "SP1A.210812.015",
+      "maximumBuildNumber": "UP1A.240105.004"
+    }
+  ]
+}
