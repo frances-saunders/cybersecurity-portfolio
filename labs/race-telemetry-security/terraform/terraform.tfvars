@@ -1,16 +1,26 @@
 #############################################
 # terraform.tfvars - Example values
 # NOTE: Do not store secrets here in real use.
-# Instead, set TF_VAR_sql_admin_password as an
-# environment variable, or let Key Vault generate it.
+# Provide sensitive values via environment variables:
+#   export TF_VAR_sql_admin_password="your-password"
 #############################################
 
+# -----------------------------
+# General Settings
+# -----------------------------
 resource_group_name = "rg-telemetry-lab"
 location            = "eastus"
 
-tenant_id        = "<your-tenant-guid>"
-admin_object_id  = "<your-user-object-id>"
+# -----------------------------
+# Identity Settings
+# -----------------------------
+tenant_id       = "<your-tenant-guid>"
+admin_object_id = "<your-user-object-id>"
 
-# Example ONLY - in real use, supply via env var:
-# export TF_VAR_sql_admin_password="SuperSecure123!"
-sql_admin_password = "SuperSecure123!"
+# -----------------------------
+# SQL Authentication
+# -----------------------------
+# Do NOT define sql_admin_password here.
+# It must be supplied securely via environment variable.
+# Example:
+#   export TF_VAR_sql_admin_password="your-password"
