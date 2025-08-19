@@ -1,4 +1,4 @@
-# Landing Zone Baseline in Azure
+# Case Study: Landing Zone Baseline in Azure
 
 ## Problem / Challenge
 
