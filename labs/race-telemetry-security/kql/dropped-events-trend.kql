@@ -1,0 +1,8 @@
+// Monitor dropped telemetry events in Event Hubs
+// Security & reliability: Dropped messages may indicate DoS, quota issues, or misconfigured producers.
+
+AzureDiagnostics
+| where ResourceType == "EVENTHUBS"
+| where OperationName == "Drop"
+| summarize DroppedCount = count() by bin(TimeGenerated, 5m), EventHubName_s
+| render timechart
