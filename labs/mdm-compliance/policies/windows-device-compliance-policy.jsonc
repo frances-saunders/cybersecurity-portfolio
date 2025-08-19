@@ -1,0 +1,40 @@
+{
+  // =====================================================
+  // Windows 11 – High Security Compliance Policy
+  // Enforces CIS/NIST-aligned baselines for enterprise use
+  // =====================================================
+
+  "@odata.type": "#microsoft.graph.windows10CompliancePolicy",
+
+  // Metadata
+  "displayName": "Windows 11 – High Security Compliance Policy",
+  "description": "Compliance policy requiring BitLocker, TPM, Defender AV, OS updates, and password/PIN rules.",
+
+  // ---------------------------
+  // Device Security
+  // ---------------------------
+  "bitLockerEnabled": true,             // Require BitLocker full-disk encryption
+  "secureBootEnabled": true,            // Require Secure Boot enabled
+  "codeIntegrityEnabled": true,         // Require kernel code integrity
+  "requireTrustedBoot": true,           // Trusted Boot enforced
+  "tpmRequired": true,                  // Require TPM for attestation
+  "osMinimumVersion": "10.0.22000.0",   // Windows 11 baseline build (21H2+)
+  "osMaximumVersion": "10.0.99999.0",
+
+  // ---------------------------
+  // Antivirus & Threat Protection
+  // ---------------------------
+  "defenderEnabled": true,              // Require Microsoft Defender
+  "defenderVersion": "4.18.2202.0",     // Minimum Defender AV version
+  "defenderCheckForSignaturesBeforeRunningScan": true,
+
+  // ---------------------------
+  // Password & Lock
+  // ---------------------------
+  "passwordRequired": true,
+  "passwordMinimumLength": 12,          // Strong password requirement
+  "passwordRequiredType": "alphanumeric",
+  "passwordExpirationDays": 90,
+  "passwordPreviousPasswordBlockCount": 5,
+  "passwordMinutesOfInactivityBeforeLock": 10
+}
