@@ -1,4 +1,4 @@
-# IAM Hardening in Azure
+# Case Study: IAM Hardening in Azure
 
 ## Problem / Challenge
 
