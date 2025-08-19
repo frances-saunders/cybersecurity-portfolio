@@ -1,47 +1,39 @@
-# Azure DevOps pipeline example for secure secret retrieval
-# ========================================================
-# Demonstrates how Key Vault integrates directly into CI/CD.
-# Uses secure variables and scripts in this lab.
-# ========================================================
+# Azure DevOps Pipeline - Secure Telemetry Deployment
+# Demonstrates fetching secrets from Azure Key Vault at runtime
 
 trigger:
-- main
+  branches:
+    include:
+      - main
 
 pool:
   vmImage: 'ubuntu-latest'
 
+variables:
+  - group: telemetry-secrets # Variable group linked to Key Vault
+
 steps:
-- checkout: self
+  - task: AzureCLI@2
+    displayName: "Terraform Init & Apply"
+    inputs:
+      azureSubscription: "Telemetry-Service-Connection"
+      scriptType: "bash"
+      scriptLocation: "inlineScript"
+      inlineScript: |
+        echo "Running Terraform to provision secure telemetry pipeline"
+        cd terraform
+        terraform init
+        terraform apply -auto-approve
 
-- task: AzureCLI@2
-  displayName: "Azure Login"
-  inputs:
-    azureSubscription: "TelemetryLab-ServiceConnection"  # pre-configured service connection
-    scriptType: bash
-    scriptLocation: inlineScript
-    inlineScript: |
-      echo "Logged into Azure"
+  - task: AzureKeyVault@2
+    displayName: "Fetch secrets from Key Vault"
+    inputs:
+      azureSubscription: "Telemetry-Service-Connection"
+      KeyVaultName: "race-telemetry-kv"
+      SecretsFilter: "sql-admin-password,cosmos-primary-key"
+      RunAsPreJob: false
 
-- task: Bash@3
-  displayName: "Retrieve SQL Password from Key Vault"
-  inputs:
-    targetType: inline
-    script: |
-      chmod +x labs/race-telemetry-security/scripts/get-sql-password.sh
-      export SQL_ADMIN_PASSWORD=$(labs/race-telemetry-security/scripts/get-sql-password.sh)
-      echo "##vso[task.setvariable variable=SQL_ADMIN_PASSWORD;issecret=true]$SQL_ADMIN_PASSWORD"
-
-- task: TerraformInstaller@1
-  displayName: "Install Terraform"
-  inputs:
-    terraformVersion: "1.9.0"
-
-- task: Bash@3
-  displayName: "Terraform Init & Apply"
-  inputs:
-    targetType: inline
-    workingDirectory: labs/race-telemetry-security/terraform
-    script: |
-      terraform init
-      terraform apply -auto-approve \
-        -var "sql_admin_password=$(SQL_ADMIN_PASSWORD)"
+  - script: |
+      echo "Retrieved SQL password: $(sql-admin-password)"
+      echo "Retrieved Cosmos Key (masked): $(cosmos-primary-key)"
+    displayName: "Verify secrets pulled securely"
