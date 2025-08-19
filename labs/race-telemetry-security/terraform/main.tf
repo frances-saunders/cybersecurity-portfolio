@@ -1,139 +1,118 @@
-#########################################
-# Race Telemetry Security Lab - Terraform
-# ---------------------------------------
-# Provisions secure Event Hubs ingestion,
-# Cosmos DB, Azure SQL, Key Vault, and
-# networking controls (VNet, NSGs, private
-# endpoints).
-#########################################
+#############################################
+# main.tf - Core Azure resources
+# Secure Race Telemetry ingestion pipeline
+# with secrets pulled from Azure Key Vault
+#############################################
 
 provider "azurerm" {
   features {}
 }
 
-# ---------------------------
 # Resource Group
-# ---------------------------
 resource "azurerm_resource_group" "rg" {
-  name     = "rg-telemetry-lab"
-  location = "eastus"
-  tags = {
-    environment = "lab"
-    workload    = "race-telemetry"
-  }
+  name     = var.resource_group_name
+  location = var.location
+  tags     = var.tags
 }
 
-# ---------------------------
-# Virtual Network + Subnets
-# ---------------------------
+# Virtual Network
 resource "azurerm_virtual_network" "vnet" {
-  name                = "vnet-telemetry"
-  location            = azurerm_resource_group.rg.location
+  name                = "telemetry-vnet"
+  address_space       = ["10.0.0.0/16"]
+  location            = var.location
   resource_group_name = azurerm_resource_group.rg.name
-  address_space       = ["10.50.0.0/16"]
 }
 
-resource "azurerm_subnet" "eventhub_subnet" {
-  name                 = "subnet-eventhub"
+# Subnet for telemetry ingestion
+resource "azurerm_subnet" "telemetry_subnet" {
+  name                 = "telemetry-subnet"
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes     = ["10.50.1.0/24"]
-
-  # Required for private endpoints
-  delegation {
-    name = "eventhub-delegation"
-    service_delegation {
-      name = "Microsoft.EventHub/namespaces"
-      actions = [
-        "Microsoft.Network/virtualNetworks/subnets/join/action"
-      ]
-    }
-  }
+  address_prefixes     = ["10.0.1.0/24"]
 }
 
-# ---------------------------
-# Key Vault for CMK
-# ---------------------------
-resource "azurerm_key_vault" "kv" {
-  name                = "kvtelemetrylab01"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  tenant_id           = data.azurerm_client_config.current.tenant_id
-  sku_name            = "standard"
-}
-
-# ---------------------------
-# Event Hubs Namespace
-# ---------------------------
-resource "azurerm_eventhub_namespace" "ehns" {
-  name                = "ehns-telemetry"
-  location            = azurerm_resource_group.rg.location
+# Event Hub Namespace
+resource "azurerm_eventhub_namespace" "eh_namespace" {
+  name                = "telemetry-namespace"
+  location            = var.location
   resource_group_name = azurerm_resource_group.rg.name
   sku                 = "Standard"
-
-  # Encryption enforced with CMK
-  identity {
-    type = "SystemAssigned"
-  }
-
-  customer_managed_key {
-    key_vault_key_id = azurerm_key_vault.kv.id
-  }
+  capacity            = 2
 }
 
-resource "azurerm_eventhub" "telemetry" {
-  name                = "eh-race-telemetry"
-  namespace_name      = azurerm_eventhub_namespace.ehns.name
+# Event Hub
+resource "azurerm_eventhub" "eh" {
+  name                = "race-telemetry"
+  namespace_name      = azurerm_eventhub_namespace.eh_namespace.name
   resource_group_name = azurerm_resource_group.rg.name
-  partition_count     = 4
+  partition_count     = 2
   message_retention   = 1
 }
 
-# ---------------------------
-# Cosmos DB (NoSQL) - Telemetry
-# ---------------------------
+# Cosmos DB Account
 resource "azurerm_cosmosdb_account" "cosmos" {
-  name                = "cosmos-telemetry"
-  location            = azurerm_resource_group.rg.location
+  name                = "telemetrycosmosacct"
+  location            = var.location
   resource_group_name = azurerm_resource_group.rg.name
   offer_type          = "Standard"
   kind                = "GlobalDocumentDB"
 
   consistency_policy {
-    consistency_level = "Session"
+    consistency_level       = "Session"
+    max_interval_in_seconds = 5
+    max_staleness_prefix    = 100
   }
 
   geo_location {
-    location          = azurerm_resource_group.rg.location
+    location          = var.location
     failover_priority = 0
   }
-
-  # Enforce virtual network + private access only
-  is_virtual_network_filter_enabled = true
-  key_vault_key_uri                 = azurerm_key_vault.kv.id
 }
 
-# ---------------------------
-# Azure SQL - Telemetry Archive
-# ---------------------------
+# SQL Server
 resource "azurerm_sql_server" "sql" {
-  name                         = "sqltelemetrylab01"
+  name                         = "telemetry-sqlserver"
   resource_group_name          = azurerm_resource_group.rg.name
-  location                     = azurerm_resource_group.rg.location
+  location                     = var.location
   version                      = "12.0"
-  administrator_login          = "sqladmin"
-  administrator_login_password = "StrongPassword123!"
+  administrator_login          = var.sql_admin_user
+
+  # Password retrieved securely from Key Vault
+  administrator_login_password = data.azurerm_key_vault_secret.sql_admin_password.value
 }
 
-resource "azurerm_sql_database" "telemetry_archive" {
-  name                = "TelemetryArchiveDB"
+resource "azurerm_sql_database" "sqldb" {
+  name                = "TelemetryDB"
   resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
+  location            = var.location
   server_name         = azurerm_sql_server.sql.name
   sku_name            = "S0"
+}
 
-  # Transparent Data Encryption w/ CMK
-  transparent_data_encryption {
-    key_vault_key_id = azurerm_key_vault.kv.id
+# Key Vault for secrets
+resource "azurerm_key_vault" "kv" {
+  name                = "telemetry-kv"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.rg.name
+  tenant_id           = var.tenant_id
+  sku_name            = "standard"
+
+  access_policy {
+    tenant_id = var.tenant_id
+    object_id = var.admin_object_id  # your Azure AD object ID
+    secret_permissions = ["get", "list", "set"]
   }
+}
+
+# Secret for SQL admin password
+resource "azurerm_key_vault_secret" "sql_password" {
+  name         = "sql-admin-password"
+  value        = var.sql_admin_password
+  key_vault_id = azurerm_key_vault.kv.id
+}
+
+# Data source to fetch secret securely
+data "azurerm_key_vault_secret" "sql_admin_password" {
+  name         = azurerm_key_vault_secret.sql_password.name
+  key_vault_id = azurerm_key_vault.kv.id
 }
