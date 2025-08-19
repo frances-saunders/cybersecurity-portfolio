@@ -13,10 +13,8 @@ The challenge was to create an integrated approach combining **KQL queries, work
 
 ---
 
-## Role & Tools
-
-**Role:** Azure Administrator / Security Lead (solo project)  
-**Tools & Technologies:** Azure Policy, Azure Monitor Logs (KQL), Azure Workbooks, Azure Automation (PowerShell), Terraform
+## Tools & Technologies
+Azure Policy, Azure Monitor Logs (KQL), Azure Workbooks, Azure Automation (PowerShell), Terraform
 
 ---
 
