@@ -1,0 +1,51 @@
+# Race Telemetry Secure Pipeline
+# ------------------------------
+# This simulates a SaaS-style pipeline that:
+# 1. Ingests raw car telemetry into Event Hub
+# 2. Writes processed data securely into Cosmos DB
+# 3. Archives event batches into Azure SQL
+# All secrets are pulled from Key Vault, never hardcoded.
+
+trigger: none
+
+stages:
+  - stage: Ingest
+    jobs:
+      - job: StreamTelemetry
+        steps:
+          - script: |
+              echo "Simulating live race telemetry ingestion..."
+              python ingest_telemetry.py \
+                --eventhub $EVENTHUB_CONNSTRING
+            env:
+              EVENTHUB_CONNSTRING: $(keyVault.eventhubConnection)
+
+  - stage: Process
+    jobs:
+      - job: ProcessCosmos
+        steps:
+          - script: |
+              echo "Processing and inserting telemetry into Cosmos DB..."
+              python process_to_cosmos.py \
+                --cosmos-uri $COSMOS_URI \
+                --cosmos-key $COSMOS_KEY
+            env:
+              COSMOS_URI: $(keyVault.cosmosUri)
+              COSMOS_KEY: $(keyVault.cosmosKey)
+
+  - stage: Archive
+    jobs:
+      - job: ArchiveSQL
+        steps:
+          - script: |
+              echo "Archiving telemetry into Azure SQL..."
+              python archive_sql.py \
+                --server $SQL_SERVER \
+                --db $SQL_DB \
+                --user $SQL_USER \
+                --password $SQL_PASS
+            env:
+              SQL_SERVER: $(keyVault.sqlServer)
+              SQL_DB: $(keyVault.sqlDB)
+              SQL_USER: $(keyVault.sqlUser)
+              SQL_PASS: $(keyVault.sqlPassword)
