@@ -14,9 +14,7 @@ output "workload_subnet_id" {
   value = azurerm_subnet.workload.id
 }
 
-output "shared_subnet_id" {
-  value = azurerm_subnet.shared.id
-}
+# Removed invalid shared subnet reference
 
 output "private_endpoint_storage_id" {
   value = azurerm_private_endpoint.storage.id
