@@ -1,4 +1,4 @@
-# Mobile Device Management (MDM) Compliance with Intune
+# Case Study: Mobile Device Management (MDM) Compliance with Intune
 
 ## Problem / Challenge
 
