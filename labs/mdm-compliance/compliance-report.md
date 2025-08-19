@@ -38,7 +38,7 @@ Devices were enrolled in Intune with no policies applied (baseline), then re-eva
 | WIN-501   | No        | Disabled    | Absent | Outdated    | Password only         | Noncompliant    | Compliant    |
 | WIN-502   | Yes       | Enabled     | TPM 2.0 | Up-to-date | Biometric + PIN       | Compliant       | Compliant    |
 
-- **Devices evaluated:** 1,370 (equal to Android + iOS total)  
+- **Devices evaluated:** 1,370  
 - **Compliance before policies:** 52%  
 - **Compliance after policies:** 100%  
 
