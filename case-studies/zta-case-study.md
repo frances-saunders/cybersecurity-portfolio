@@ -1,4 +1,4 @@
-# Zero Trust Network Segmentation in Azure
+# Case Study: Zero Trust Network Segmentation in Azure
 
 ## Problem / Challenge
 
