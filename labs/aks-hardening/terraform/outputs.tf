@@ -4,7 +4,7 @@
 
 output "resource_group_name" {
   description = "Resource group containing the AKS cluster"
-  value       = azurerm_resource_group.rg.name
+  value       = azurerm_resource_group.aks_rg.name
 }
 
 output "aks_cluster_name" {
