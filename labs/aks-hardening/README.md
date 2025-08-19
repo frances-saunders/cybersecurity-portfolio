@@ -4,10 +4,8 @@ This lab demonstrates the implementation of the **Azure Kubernetes Service (AKS)
 
 ---
 
-## Role & Tools
-
-**Role:** Cloud Security Administrator (solo project)  
-**Tools & Technologies:** Azure Policy, Kubernetes RBAC & Network Policies, Terraform, kubectl
+## Tools & Technologies
+Azure Policy, Kubernetes RBAC & Network Policies, Terraform, kubectl
 
 ---
 
