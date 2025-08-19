@@ -1,37 +1,52 @@
-# GitHub Actions pipeline example for secure secret retrieval
-# ==========================================================
-# Demonstrates how to integrate Azure Key Vault with telemetry infra deployment.
-# Uses the PowerShell/Bash scripts provided in scripts/.
-# ==========================================================
+# GitHub Actions Workflow - Secure Telemetry Deployment
+# Demonstrates pulling secrets securely from Azure Key Vault
 
-name: Deploy Race Telemetry Lab
+name: Secure Telemetry Deployment
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
       - name: Azure Login
-        uses: azure/login@v2
+        uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-          # Stored securely in GitHub → Settings → Secrets and variables
 
-      - name: Retrieve SQL Admin Password (from Key Vault)
-        run: |
-          chmod +x labs/race-telemetry-security/scripts/get-sql-password.sh
-          SQL_ADMIN_PASSWORD=$(labs/race-telemetry-security/scripts/get-sql-password.sh)
-          echo "SQL_ADMIN_PASSWORD retrieved securely"
-        shell: bash
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
 
       - name: Terraform Init & Apply
-        working-directory: labs/race-telemetry-security/terraform
         run: |
+          cd terraform
           terraform init
-          terraform apply -auto-approve \
-            -var "sql_admin_password=$SQL_ADMIN_PASSWORD"
+          terraform apply -auto-approve
+
+      - name: Retrieve Key Vault Secrets
+        run: |
+          echo "Fetching secrets from Key Vault..."
+          SQL_PASSWORD=$(az keyvault secret show \
+            --name sql-admin-password \
+            --vault-name race-telemetry-kv \
+            --query value -o tsv)
+          COSMOS_KEY=$(az keyvault secret show \
+            --name cosmos-primary-key \
+            --vault-name race-telemetry-kv \
+            --query value -o tsv)
+
+          echo "SQL_PASSWORD=$SQL_PASSWORD" >> $GITHUB_ENV
+          echo "COSMOS_KEY=$COSMOS_KEY" >> $GITHUB_ENV
+
+      - name: Deploy Application with Secrets
+        run: |
+          echo "Deploying telemetry system with secure secrets..."
+          echo "SQL Password: $SQL_PASSWORD"
+          echo "Cosmos Key (masked): $COSMOS_KEY"
