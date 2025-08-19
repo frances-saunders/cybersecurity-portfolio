@@ -1,4 +1,4 @@
-# Enterprise Policy-as-Code (EPaC) in Azure
+# Case Study: Enterprise Policy-as-Code (EPaC) in Azure
 
 ## Problem / Challenge
 The enterprise Azure environment was experiencing recurring **audit gaps and compliance drift** across hundreds of subscriptions. Security controls were being applied inconsistently, leading to manual remediation, slower audit readiness, and increased risk exposure.  
