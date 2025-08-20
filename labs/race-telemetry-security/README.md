@@ -28,6 +28,9 @@ labs/race-telemetry-security/
 │   ├── azure-pipelines.yml             # Secure Azure DevOps pipeline
 │   └── github-actions.yml              # Secure GitHub Actions workflow
 │
+├── keyvault/
+│   └── keyvault-setup.tf               # Key Vault provisioning & secrets
+|
 ├── kql/
 │   ├── anomalous-ingestion-attempts.kql
 │   └── dropped-events-trend.kql
@@ -47,9 +50,6 @@ labs/race-telemetry-security/
 │   ├── outputs.tf
 │   ├── terraform.tfvars
 │   └── variables.tf
-│
-├── keyvault/
-│   └── keyvault-setup.tf               # Key Vault provisioning & secrets
 │
 └── README.md
 ````
@@ -139,5 +139,3 @@ Both pipelines demonstrate **runtime retrieval of secrets** with no secrets in s
 * **Infrastructure as Code (IaC)** – Automated, repeatable deployments.
 * **Detection Engineering** – Custom KQL queries for anomaly detection.
 * **Zero Trust Security** – No plaintext secrets, enforced encryption, secure data flows.
-
-```
