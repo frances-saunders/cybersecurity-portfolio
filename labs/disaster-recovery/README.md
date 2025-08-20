@@ -39,7 +39,7 @@ These gaps created unacceptable business risk in the event of a regional outage 
 1. **Playbook Standardization**  
    * Authored a **centralized DR Playbook** with clear roles, runbooks, and escalation paths.  
    * Playbook linked to application tiers, SLAs, and RTO/RPO targets.  
-   * Sanitized version provided in this repo: [`artifacts/disaster-recovery-playbook.md`](./artifacts/disaster-recovery-playbook.md).  
+   * Sanitized version provided here: labs/disaster-recovery/DR-Playbook-Excerpt.md.  
 
 2. **Automation of Failover Procedures**  
    * Integrated **Azure Site Recovery** for critical apps.  
