@@ -1,0 +1,6 @@
+// labs/siem/detections/privilege-escalation.kql
+// Detect suspicious privilege escalation in Azure AD
+AuditLogs
+| where OperationName == "Add member to role"
+| where TargetRole == "Company Administrator"
+| extend InitiatingIP = tostring(InitiatedBy.user.ipAddress)
