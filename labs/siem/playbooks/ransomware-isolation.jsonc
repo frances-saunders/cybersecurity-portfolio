@@ -1,0 +1,26 @@
+// labs/siem/playbooks/ransomware-isolation.jsonc
+// SOAR playbook: Isolate suspected ransomware-infected host
+{
+  "type": "Microsoft.Logic/workflows",
+  "name": "RansomwareIsolation",
+  "properties": {
+    "definition": {
+      "triggers": {
+        "when_ransomware_detected": { "type": "Request" }
+      },
+      "actions": {
+        "isolate_host": {
+          "type": "DefenderATP.IsolateDevice",
+          "inputs": { "deviceId": "@{triggerBody().deviceId}" }
+        },
+        "notify": {
+          "type": "Email.Send",
+          "inputs": {
+            "to": "soc@company.com",
+            "subject": "Host Isolated for Ransomware Containment"
+          }
+        }
+      }
+    }
+  }
+}
