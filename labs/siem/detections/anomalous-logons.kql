@@ -1,0 +1,10 @@
+// Detection: Anomalous Logon Locations
+// Purpose: Identify logons from unusual geolocations, indicating possible compromised accounts.
+// Method: Compares logon location with user’s typical history.
+
+SigninLogs
+| extend Location = tostring(parse_json(LocationDetails).countryOrRegion)
+| summarize Count = count(), Locations = make_set(Location) by UserPrincipalName
+| where array_length(Locations) > 1
+| project UserPrincipalName, Locations, Count
+| order by Count desc
