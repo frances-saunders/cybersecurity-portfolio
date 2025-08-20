@@ -30,7 +30,7 @@
                 "path": "/v2/Mail",
                 "body": {
                   "Message": {
-                    "Subject": "⚠️ Suspicious OAuth App Detected",
+                    "Subject": "Suspicious OAuth App Detected",
                     "Body": "A suspicious OAuth application was granted consent. Immediate review is required.",
                     "ToRecipients": [
                       { "EmailAddress": { "Address": "secops-team@company.com" } }
