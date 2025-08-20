@@ -65,6 +65,4 @@ labs/meraki-zero-trust-firewall/
 
 ## Portfolio Impact
 
-This lab demonstrates **10+ years of experience** in enterprise network security by showing not just the configs, but the **design rationale, Zero Trust alignment, and operational excellence** behind them. It highlights the ability to deliver **secure, automated, and auditable network architectures** that meet both technical and business objectives.
-
-```
+This lab demonstrates enterprise network security by showing not just the configs, but the **design rationale, Zero Trust alignment, and operational excellence** behind them. It highlights the ability to deliver **secure, automated, and auditable network architectures** that meet both technical and business objectives.
