@@ -68,7 +68,7 @@ These gaps created unacceptable business risk in the event of a regional outage 
 
 ## Artifacts
 
-* **Case Study** – [Disaster Recovery Playbook Case Study](./case-study.md)  
+* **Case Study** – [Disaster Recovery Playbook Case Study](./case-studies/diaster-recovery-case-study.md)  
 * **Sanitized DR Playbook** – [Disaster Recovery Playbook Excerpt](./labs/disaster-recovery/DR-Playbook-Excerpt.md)  
 * **Terraform Modules** – Infrastructure-as-Code for recovery site deployment  
 * **Automation Scripts** – PowerShell and Bash runbooks for failover/recovery  
