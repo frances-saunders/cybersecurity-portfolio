@@ -1,0 +1,57 @@
+{
+  // Playbook: OAuth App Investigation
+  // Purpose: Automate response when a suspicious OAuth app is consented.
+  "$schema": "https://schema.management.azure.com/schemas/2016-06-01/workflowdefinition.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "playbookName": {
+      "defaultValue": "oauth-app-playbook",
+      "type": "String"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2019-05-01",
+      "name": "[parameters('playbookName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "definition": {
+          "actions": {
+            "Send_Alert_Email": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": {
+                  "connection": {
+                    "name": "@parameters('$connections')['office365']['connectionId']"
+                  }
+                },
+                "method": "post",
+                "path": "/v2/Mail",
+                "body": {
+                  "Message": {
+                    "Subject": "⚠️ Suspicious OAuth App Detected",
+                    "Body": "A suspicious OAuth application was granted consent. Immediate review is required.",
+                    "ToRecipients": [
+                      { "EmailAddress": { "Address": "secops-team@company.com" } }
+                    ]
+                  },
+                  "SaveToSentItems": "false"
+                }
+              }
+            }
+          },
+          "triggers": {
+            "When_A_Suspicious_OAuth_App_Is_Detected": {
+              "type": "Request",
+              "kind": "Http",
+              "inputs": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
