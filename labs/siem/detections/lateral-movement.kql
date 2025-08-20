@@ -1,0 +1,7 @@
+// labs/siem/detections/lateral-movement.kql
+// Detect potential pass-the-hash or brute-force lateral movement
+SecurityEvent
+| where EventID == 4624 and LogonType == 3
+| where AccountType == "User"
+| summarize Attempts = count() by Account, IpAddress, bin(TimeGenerated, 5m)
+| where Attempts > 10
