@@ -1,0 +1,26 @@
+// labs/siem/playbooks/suspicious-oauth-app.jsonc
+// SOAR playbook: Disable suspicious OAuth application and alert SOC
+{
+  "type": "Microsoft.Logic/workflows",
+  "name": "SuspiciousOAuthAppResponse",
+  "properties": {
+    "definition": {
+      "triggers": {
+        "when_oauth_app_flagged": { "type": "Request" }
+      },
+      "actions": {
+        "disable_app": {
+          "type": "AzureAD.DisableApp",
+          "inputs": { "appId": "@{triggerBody().appId}" }
+        },
+        "notify": {
+          "type": "Email.Send",
+          "inputs": {
+            "to": "soc@company.com",
+            "subject": "Suspicious OAuth Application Disabled"
+          }
+        }
+      }
+    }
+  }
+}
