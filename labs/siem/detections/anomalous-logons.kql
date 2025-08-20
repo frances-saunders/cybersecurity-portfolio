@@ -1,10 +1,12 @@
-// Detection: Anomalous Logon Locations
-// Purpose: Identify logons from unusual geolocations, indicating possible compromised accounts.
-// Method: Compares logon location with user’s typical history.
+// anomalous-logons.kql
+// Detects unusual logon patterns such as rare IPs or impossible travel
 
 SigninLogs
-| extend Location = tostring(parse_json(LocationDetails).countryOrRegion)
-| summarize Count = count(), Locations = make_set(Location) by UserPrincipalName
-| where array_length(Locations) > 1
-| project UserPrincipalName, Locations, Count
-| order by Count desc
+| extend Location = tostring(LocationDetails.countryOrRegion)
+| summarize Count = count() by UserPrincipalName, Location, bin(TimeGenerated, 1h)
+| join kind=inner (
+    SigninLogs
+    | summarize baselineCount = avg(count()) by UserPrincipalName, Location
+) on UserPrincipalName, Location
+| where Count > baselineCount * 3
+| project TimeGenerated, UserPrincipalName, Location, Count, baselineCount
