@@ -19,23 +19,33 @@ The lab is structured to highlight:
 ```
 labs/siem/
 │
-├── terraform/                  # Terraform IaC for Sentinel + connectors
-│   ├── main.tf
-│   ├── variables.tf
-│   ├── outputs.tf
-│   └── terraform.tfvars
-│
-├── detections/                 # KQL detection rules
+├── detections/                         # KQL detection rules
+│   ├── anomalous-logons.kql
 │   ├── lateral-movement.kql
-│   ├── privilege-escalation.kql
-│   └── anomalous-logons.kql
+│   └── privilege-escalation.kql
 │
-├── playbooks/                  # SOAR playbooks (JSONC format)
-│   ├── credential-leak-playbook.jsonc
-│   ├── ransomware-isolation-playbook.jsonc
-│   └── oauth-app-playbook.jsonc
+├── playbooks/                          # SOAR playbooks (JSONC format)
+│   ├── credential-leak-response.jsonc
+│   ├── oauth-app-playbook.jsonc
+│   └── ransomware-isolation.jsonc
+│
+├── scripts/                            # Automation & ingestion scripts
+│   ├── bulk-disable-users.ps1          # Remediate compromised accounts
+│   ├── enrich-threat-intel.ps1         # Threat intel enrichment (PowerShell)
+│   ├── enrich-threat-intel.sh          # Threat intel enrichment (Bash)
+│   ├── ingest-azure-activity.sh        # Push Azure Activity Logs to LAW
+│   ├── ingest-custom-telemetry.sh      # Ingest custom app telemetry
+│   ├── ingest-defender-alerts.ps1      # Collect Microsoft Defender alerts
+│   └── post-to-law.py                  # Generic script to send logs to LAW
+│
+├── terraform/                          # Terraform IaC for Sentinel + connectors
+│   ├── main.tf
+│   ├── outputs.tf
+│   ├── terraform.tfvars
+│   └── variables.tf
 │
 └── README.md
+
 ```
 
 ---
