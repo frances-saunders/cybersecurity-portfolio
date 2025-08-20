@@ -39,7 +39,7 @@ These gaps created unacceptable business risk in the event of a regional outage 
 1. **Playbook Standardization**  
    * Authored a **centralized DR Playbook** with clear roles, runbooks, and escalation paths.  
    * Playbook linked to application tiers, SLAs, and RTO/RPO targets.  
-   * Sanitized version provided here: labs/disaster-recovery/DR-Playbook-Excerpt.md.  
+   * Sanitized version provided here: [Disaster Recovery Playbook Excerpt](./labs/disaster-recovery/DR-Playbook-Excerpt.md).  
 
 2. **Automation of Failover Procedures**  
    * Integrated **Azure Site Recovery** for critical apps.  
@@ -69,7 +69,7 @@ These gaps created unacceptable business risk in the event of a regional outage 
 ## Artifacts
 
 * **Case Study** – [Disaster Recovery Playbook Case Study](./case-study.md)  
-* **Sanitized DR Playbook** – [Disaster Recovery Playbook Template](./artifacts/disaster-recovery-playbook.md)  
+* **Sanitized DR Playbook** – [Disaster Recovery Playbook Excerpt](./labs/disaster-recovery/DR-Playbook-Excerpt.md)  
 * **Terraform Modules** – Infrastructure-as-Code for recovery site deployment  
 * **Automation Scripts** – PowerShell and Bash runbooks for failover/recovery  
 
