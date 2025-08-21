@@ -1,0 +1,59 @@
+{
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json",
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "# Zabbix + Sentinel Integration Dashboard"
+      },
+      "customWidth": "100"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "This workbook provides executive visibility into **Zabbix monitoring data correlated with Sentinel analytics**. It highlights incident volume, anomalous events, and automated SOAR responses."
+      }
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityIncident | summarize Incidents=count() by bin(TimeGenerated, 1h)",
+        "size": 1,
+        "title": "Incidents Over Time (All Sources)",
+        "visualization": "timechart"
+      }
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "Zabbix_CL | summarize Alerts=count() by Severity, bin(TimeGenerated, 1h)",
+        "title": "Zabbix Alerts by Severity",
+        "visualization": "barchart",
+        "size": 1
+      }
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "union (Zabbix_CL), (SecurityAlert) | summarize Correlated=findcount() by bin(TimeGenerated, 1h)",
+        "title": "Correlated Zabbix + Sentinel Anomalies",
+        "visualization": "linechart",
+        "size": 1
+      }
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityIncident | summarize Resolved=countif(Status=='Resolved'), Active=countif(Status=='Active')",
+        "title": "Incident Response Status (SOAR Impact)",
+        "visualization": "piechart",
+        "size": 1
+      }
+    }
+  ]
+}
