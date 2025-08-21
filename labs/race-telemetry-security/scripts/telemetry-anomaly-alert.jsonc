@@ -1,0 +1,49 @@
+{
+  // SOAR Playbook: Telemetry Anomaly Alert
+  // Trigger: Sentinel alert from anomaly detection KQL query
+  // Action: Log incident, enrich with context, notify analysts & engineers
+  "schemaVersion": "1.0",
+  "trigger": {
+    "source": "Microsoft Sentinel",
+    "condition": {
+      "alertTag": "Telemetry Anomaly"
+    }
+  },
+  "actions": [
+    {
+      "type": "Incident",
+      "operation": "create",
+      "parameters": {
+        "title": "Telemetry Anomaly Detected",
+        "severity": "High",
+        "description": "Unusual telemetry pattern detected for '@alert.deviceId'. Possible tampering or malfunction."
+      }
+    },
+    {
+      "type": "AzureLogAnalytics",
+      "operation": "query",
+      "parameters": {
+        "workspaceId": "/subscriptions/<sub_id>/resourceGroups/<rg_name>/providers/Microsoft.OperationalInsights/workspaces/<law_name>",
+        "query": "TelemetryEvents | where DeviceId == '@alert.deviceId' | summarize count() by EventType"
+      }
+    },
+    {
+      "type": "Teams",
+      "operation": "sendMessage",
+      "parameters": {
+        "team": "SecurityOps",
+        "channel": "Incidents",
+        "message": "Telemetry anomaly detected for '@alert.deviceId'. Incident created in Sentinel. Engineering team notified."
+      }
+    },
+    {
+      "type": "Teams",
+      "operation": "sendMessage",
+      "parameters": {
+        "team": "Engineering",
+        "channel": "RaceDay",
+        "message": "Telemetry anomaly detected for '@alert.deviceId'. Please verify integrity of sensor readings."
+      }
+    }
+  ]
+}
