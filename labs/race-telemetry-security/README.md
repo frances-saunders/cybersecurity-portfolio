@@ -44,6 +44,8 @@ labs/race-telemetry-security/
 ├── scripts/
 │   ├── get-sql-password.ps1            # PowerShell – fetch secrets at runtime
 │   └── get-sql-password.sh             # Bash – fetch secrets at runtime
+|   ├── auto-isolate-iot-device.jsonc            
+│   └── telemetry-anomaly-alert.jsonc
 │
 ├── terraform/
 │   ├── main.tf
