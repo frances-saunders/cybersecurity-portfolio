@@ -1,0 +1,22 @@
+{
+  // Playbook: notify-teams
+  // Purpose: Sends enriched incident details to Microsoft Teams
+  "definition": {
+    "triggers": {
+      "manual": {
+        "type": "Request",
+        "kind": "Http"
+      }
+    },
+    "actions": {
+      "PostMessageToTeams": {
+        "type": "Teams.PostMessage",
+        "inputs": {
+          "teamId": "<TEAM_ID>",
+          "channelId": "<CHANNEL_ID>",
+          "message": "🚨 Sentinel Incident with Zabbix Correlation 🚨\n\nHost: @triggerBody()?['Computer']\nSeverity: @triggerBody()?['Severity']\nProblem: @triggerBody()?['ProblemName']"
+        }
+      }
+    }
+  }
+}
