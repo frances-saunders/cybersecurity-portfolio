@@ -1,0 +1,30 @@
+{
+  // Playbook: auto-isolate-host
+  // Purpose: Quarantines a host if Sentinel incident correlated with Zabbix anomaly
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "actions": {
+      "Condition": {
+        "type": "If",
+        "expression": "@equals(triggerBody()?['Severity'], 'Disaster')",
+        "actions": {
+          "IsolateVM": {
+            "type": "AzureResourceAction",
+            "inputs": {
+              "hostName": "@triggerBody()?['Computer']",
+              "action": "isolate"
+            },
+            "runAfter": {}
+          }
+        }
+      }
+    },
+    "triggers": {
+      "manual": {
+        "type": "Request",
+        "kind": "Http",
+        "inputs": {}
+      }
+    }
+  }
+}
