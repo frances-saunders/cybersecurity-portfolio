@@ -15,7 +15,7 @@
     .\bulk-disable-users.ps1 -CsvPath "C:\path\to\<your_file>.csv"
 
 .NOTES
-    Author: Frances Saunders 
+    Author: Frances Saunders Portfolio Lab
     Safe for demo use: replace <your_file>.csv with real input in production
 #>
 
