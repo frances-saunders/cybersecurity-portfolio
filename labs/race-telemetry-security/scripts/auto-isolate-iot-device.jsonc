@@ -1,0 +1,48 @@
+{
+  // SOAR Playbook: Auto-Isolate IoT Device
+  // Trigger: Sentinel alert tagged with "Compromised IoT Device"
+  // Action: Disable IoT device, revoke credentials, notify security & engineering teams
+  "schemaVersion": "1.0",
+  "trigger": {
+    "source": "Microsoft Sentinel",
+    "condition": {
+      "alertTag": "Compromised IoT Device"
+    }
+  },
+  "actions": [
+    {
+      "type": "AzureIoTHub",
+      "operation": "disableDevice",
+      "parameters": {
+        "iotHubResourceId": "/subscriptions/<sub_id>/resourceGroups/<rg_name>/providers/Microsoft.Devices/IotHubs/<iot_hub_name>",
+        "deviceId": "@alert.deviceId"
+      }
+    },
+    {
+      "type": "AzureKeyVault",
+      "operation": "revokeSecret",
+      "parameters": {
+        "keyVaultResourceId": "/subscriptions/<sub_id>/resourceGroups/<rg_name>/providers/Microsoft.KeyVault/vaults/<keyvault_name>",
+        "secretName": "@alert.deviceCredential"
+      }
+    },
+    {
+      "type": "Teams",
+      "operation": "sendMessage",
+      "parameters": {
+        "team": "SecurityOps",
+        "channel": "Incidents",
+        "message": "IoT device '@alert.deviceId' was automatically isolated due to compromise indicators."
+      }
+    },
+    {
+      "type": "Teams",
+      "operation": "sendMessage",
+      "parameters": {
+        "team": "Engineering",
+        "channel": "RaceDay",
+        "message": "Telemetry device '@alert.deviceId' was isolated for security reasons. Engineering teams should validate alternate feeds."
+      }
+    }
+  ]
+}
