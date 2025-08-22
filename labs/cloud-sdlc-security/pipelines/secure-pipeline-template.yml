@@ -1,0 +1,67 @@
+# Secure CI/CD Pipeline Template
+# Demonstrates DevSecOps integration in the SDLC
+
+trigger:
+  branches:
+    include:
+      - main
+
+variables:
+  vmImage: 'ubuntu-latest'
+
+stages:
+  - stage: SecurityValidation
+    displayName: "Pre-Deployment Security Checks"
+    jobs:
+      - job: IaCScan
+        displayName: "Terraform IaC Security Scan"
+        pool:
+          vmImage: $(vmImage)
+        steps:
+          - task: Bash@3
+            displayName: "Run Terraform Validate"
+            inputs:
+              targetType: inline
+              script: |
+                terraform init
+                terraform validate
+          
+          - task: Bash@3
+            displayName: "Run tfsec for IaC Misconfiguration"
+            inputs:
+              targetType: inline
+              script: |
+                curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
+                tfsec .
+
+      - job: ContainerScan
+        displayName: "Container Image Scan"
+        pool:
+          vmImage: $(vmImage)
+        steps:
+          - task: Bash@3
+            displayName: "Scan Docker Image with Trivy"
+            inputs:
+              targetType: inline
+              script: |
+                docker build -t app:latest .
+                curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+                ./trivy image --severity HIGH,CRITICAL app:latest
+
+  - stage: Deploy
+    displayName: "Deploy Secure Infrastructure"
+    dependsOn: SecurityValidation
+    condition: succeeded()
+    jobs:
+      - job: TerraformApply
+        pool:
+          vmImage: $(vmImage)
+        steps:
+          - task: Bash@3
+            displayName: "Terraform Apply"
+            inputs:
+              targetType: inline
+              script: |
+                terraform init
+                terraform plan -out=tfplan
+                terraform apply -auto-approve tfplan
