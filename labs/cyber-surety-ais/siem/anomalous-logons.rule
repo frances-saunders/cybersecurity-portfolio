@@ -1,0 +1,16 @@
+# ArcSight / Splunk Correlation Rule
+# Purpose: Detect anomalous logons outside duty hours or from multiple geographies
+
+RULE NAME: Anomalous User Logons
+SEVERITY: High
+
+CONDITIONS:
+- EventType = "Logon"
+- NOT (SourceIP in [10.0.0.0/8, 192.168.0.0/16])   # exclude local ranges
+- Time NOT between 0600-1800
+- UserAccount triggers >= 3 logons from > 2 geographies within 1 hour
+
+ACTIONS:
+- Generate SIEM alert "Suspicious Logon Behavior"
+- Notify Cyber Surety On-Call (DL-CyberSurety-Alerts)
+- Auto-create ticket in Remedy/ServiceNow
