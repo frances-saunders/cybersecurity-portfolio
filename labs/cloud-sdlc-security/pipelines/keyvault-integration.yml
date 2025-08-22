@@ -1,0 +1,16 @@
+# CI/CD Pipeline Task - Secure Key Vault Integration
+# Demonstrates secure secret retrieval instead of storing plaintext in variables
+
+steps:
+  - task: AzureKeyVault@2
+    inputs:
+      azureSubscription: "MyServiceConnection"
+      KeyVaultName: "sdlc-lab-kv"
+      SecretsFilter: "sql-admin-password,api-token"
+      RunAsPreJob: true
+
+  - script: |
+      echo "Secrets securely retrieved from Key Vault."
+      # Example: Use secrets in Terraform or app deployment
+      terraform apply -var="admin_password=$(sql-admin-password)"
+    displayName: "Deploy with Secure Secrets"
