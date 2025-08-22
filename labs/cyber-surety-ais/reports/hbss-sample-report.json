@@ -1,0 +1,21 @@
+{
+  "reportDate": "2018-02-15",
+  "totalEndpoints": 1240,
+  "compliantEndpoints": 1215,
+  "nonCompliantEndpoints": 25,
+  "topFindings": [
+    {
+      "category": "DAT File Out of Date",
+      "affectedEndpoints": 12
+    },
+    {
+      "category": "Removable Media Usage",
+      "affectedEndpoints": 7
+    },
+    {
+      "category": "Firewall Disabled",
+      "affectedEndpoints": 6
+    }
+  ],
+  "summary": "Compliance at 97.9%. Non-compliance cases were escalated for remediation within 24 hours."
+}
