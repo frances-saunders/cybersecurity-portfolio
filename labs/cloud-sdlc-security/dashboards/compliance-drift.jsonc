@@ -1,0 +1,29 @@
+// Azure Workbook: Compliance Drift Dashboard
+// Visualizes compliance drift across SDLC environments
+
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 3,
+      "content": {
+        "chartId": "complianceDrift",
+        "title": "Compliance Drift Over Time",
+        "visualization": "linechart",
+        "query": "SecurityResources | where type == 'microsoft.policyinsights/policystates' | summarize count() by bin(TimeGenerated, 1d), complianceState",
+        "timeContext": {
+          "durationMs": 604800000
+        }
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "chartId": "policyViolations",
+        "title": "Top Policy Violations",
+        "visualization": "barchart",
+        "query": "SecurityResources | summarize count() by policyAssignmentName | top 10 by count_ desc"
+      }
+    }
+  ]
+}
