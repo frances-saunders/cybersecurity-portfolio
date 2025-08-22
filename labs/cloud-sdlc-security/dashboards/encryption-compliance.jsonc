@@ -1,0 +1,39 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": {
+          "query": "SecurityResources | where type == 'microsoft.security/assessments' | where properties.displayName == 'Storage accounts should have infrastructure encryption'",
+          "size": 10,
+          "timeContext": {
+            "durationMs": 604800000
+          },
+          "visualization": "barchart",
+          "title": "Storage Account Encryption Compliance Drift",
+          "xAxis": "properties.resourceDetails.id",
+          "yAxis": "properties.status.code"
+        }
+      }
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": {
+          "query": "SecurityResources | where type == 'microsoft.security/assessments' | where properties.displayName == 'Storage accounts should have infrastructure encryption' | summarize count() by tostring(properties.status.code)",
+          "visualization": "piechart",
+          "title": "Encryption Compliance Status Breakdown"
+        }
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "json": {
+          "markdown": "### Workbook Purpose\n\nThis workbook tracks compliance drift for storage account encryption. It allows cloud security teams to quickly visualize which storage accounts are non-compliant, monitor trends over time, and validate the effect of policy enforcement through **Terraform + Azure Policy**."
+        }
+      }
+    }
+  ]
+}
