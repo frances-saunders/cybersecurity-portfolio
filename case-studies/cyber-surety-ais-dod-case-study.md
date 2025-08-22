@@ -2,7 +2,7 @@
 
 ## Problem / Challenge
 
-Between 2015 and 2018, classified Air Force Information Systems (AIS) required **rigorous cybersecurity enforcement** in accordance with DoD directives and Air Force Instructions (AFIs). The environment faced several persistent challenges:
+Classified Air Force Information Systems (AIS) required **rigorous cybersecurity enforcement** in accordance with DoD directives and Air Force Instructions (AFIs). The environment faced several persistent challenges:
 
 * **Audit log monitoring** was time-consuming and inconsistent across systems.
 * **Encryption enforcement** for classified networks demanded strict control of removable media, key management, and data-at-rest protections.
@@ -13,8 +13,7 @@ The challenge was to ensure classified systems were **continuously compliant**, 
 
 ---
 
-## Tools & Technologies (2015–2018)
-
+## Tools & Technologies
 * **HBSS (Host Based Security System, McAfee ePO)** – endpoint protection and centralized policy enforcement
 * **ACAS (Assured Compliance Assessment Solution, Nessus + SecurityCenter)** – vulnerability scanning and compliance validation
 * **DISA STIGs (Security Technical Implementation Guides)** – hardening standards for servers, endpoints, and networks
