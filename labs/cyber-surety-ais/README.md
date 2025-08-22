@@ -71,8 +71,7 @@ labs/
     │   └── compliance-checklist.md   # Sanitized DR/CCRI checklist
     ├── reports/
     │   ├── hbss-sample-report.json   # Sample HBSS dashboard output
-    │   ├── acas-scan-results.csv     # Sanitized ACAS scan results
-    │   └── stig-tracking.xlsx        # Example STIG compliance tracker
+    │   └── acas-scan-results.csv     # Sanitized ACAS scan results
     ├── siem/
     │   └── anomalous-logons.rule     # Example ArcSight/Splunk correlation rule
     └── audits/
