@@ -1,0 +1,5 @@
+Host,PluginID,Severity,Vulnerability,Status,FirstDetected,LastObserved
+10.12.45.21,19506,High,OpenSSL TLS Information Disclosure,Open,2018-02-01,2018-02-15
+10.12.45.34,26917,Medium,SMB Signing Not Required,Open,2018-02-03,2018-02-15
+10.12.46.10,33850,Critical,Unsupported Windows OS,Mitigated,2018-01-20,2018-02-10
+10.12.46.25,51192,Low,ICMP Timestamp Response,Open,2018-02-14,2018-02-14
