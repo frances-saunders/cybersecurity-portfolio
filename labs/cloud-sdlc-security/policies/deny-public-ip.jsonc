@@ -1,0 +1,28 @@
+// Azure Policy: Deny Public IP Assignments
+// Enforces secure cloud networking by preventing creation of resources with public IPs
+
+{
+  "properties": {
+    "displayName": "Deny Public IPs",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "This policy denies the creation of resources that expose public IP addresses.",
+    "policyRule": {
+      "if": {
+        "anyOf": [
+          {
+            "field": "Microsoft.Network/publicIPAddresses/ipAddress",
+            "exists": "true"
+          },
+          {
+            "field": "Microsoft.Network/networkInterfaces/ipConfigurations.publicIpAddress.id",
+            "exists": "true"
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
