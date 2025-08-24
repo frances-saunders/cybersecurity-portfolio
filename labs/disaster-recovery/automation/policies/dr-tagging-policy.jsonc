@@ -1,0 +1,20 @@
+{
+  // Policy: Enforce DR Tagging Standards
+  // Ensures all resources are tagged with a DR tier classification
+
+  "properties": {
+    "displayName": "Require DR Tagging",
+    "policyType": "Custom",
+    "mode": "Indexed",
+    "description": "Resources must include a 'dr-tier' tag (Tier1, Tier2, or Tier3) for disaster recovery readiness.",
+    "policyRule": {
+      "if": {
+        "field": "tags['dr-tier']",
+        "exists": "false"
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
