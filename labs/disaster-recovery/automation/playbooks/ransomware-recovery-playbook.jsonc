@@ -1,0 +1,39 @@
+{
+  // SOAR Playbook: Automated Ransomware Recovery
+  // Responds to ransomware detection with isolation and DR failover
+
+  "trigger": {
+    "type": "SecurityAlert",
+    "filter": "RansomwareDetected"
+  },
+  "actions": [
+    {
+      "type": "AzureFirewall",
+      "operation": "isolateSubnet",
+      "parameters": {
+        "subnetId": "/subscriptions/<sub_id>/resourceGroups/<rg>/providers/Microsoft.Network/virtualNetworks/<vnet>/subnets/dr-workload"
+      }
+    },
+    {
+      "type": "AzureKeyVault",
+      "operation": "retrieveSecret",
+      "parameters": {
+        "vaultName": "dr-lab-keyvault",
+        "secretName": "storage-account-key"
+      }
+    },
+    {
+      "type": "AzureStorage",
+      "operation": "failover",
+      "parameters": {
+        "accountName": "mystorageacct",
+        "resourceGroup": "rg-dr-lab"
+      }
+    },
+    {
+      "type": "Notification",
+      "channel": "MicrosoftTeams",
+      "message": "Ransomware detected — storage failover initiated and workload subnet isolated."
+    }
+  ]
+}
