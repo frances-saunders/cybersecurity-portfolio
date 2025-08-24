@@ -66,16 +66,24 @@ The Cyber Surety team needed to:
 ```
 labs/
 └── cyber-surety-ais/
-    ├── README.md                     # Lab documentation
+    ├── README.md                          # Lab documentation
     ├── playbooks/
-    │   └── compliance-checklist.md   # Sanitized DR/CCRI checklist
+    │   └── compliance-checklist.md        # Sanitized compliance/CCRI checklist
     ├── reports/
-    │   ├── hbss-sample-report.json   # Sample HBSS dashboard output
-    │   └── acas-scan-results.csv     # Sanitized ACAS scan results
+    │   ├── hbss-sample-report.json        # Sample HBSS dashboard output
+    │   ├── acas-scan-results.csv          # Sanitized ACAS scan results
+    │   └── stig-tracking.md               # STIG / POA&M tracking in Markdown
     ├── siem/
-    │   └── anomalous-logons.rule     # Example ArcSight/Splunk correlation rule
-    └── audits/
-        └── ccri-prep-doc.md          # Mock CCRI inspection readiness doc
+    │   └── anomalous-logons.rule          # Example ArcSight/Splunk correlation rule
+    ├── incident-response/
+    │   └── incident-report-template.md    # Sanitized incident report template
+    ├── logs/
+    │   └── daily-ais-monitoring-log.md    # Daily AIS monitoring log
+    ├── audits/
+    │   └── ccri-prep-doc.md               # Mock CCRI inspection readiness doc
+    └── summaries/
+        └── executive-summary.md           # Executive-level compliance summary
+
 ```
 
 ---
