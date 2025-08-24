@@ -1,0 +1,33 @@
+# Disaster Recovery Validation Pipeline
+# Ensures DR readiness via automated test failovers
+# Secrets retrieved securely from Azure Key Vault
+
+trigger: none
+
+variables:
+  - group: KeyVault-Secrets  # Azure DevOps variable group linked to Key Vault
+
+stages:
+  - stage: ValidateFailover
+    displayName: "Disaster Recovery Validation"
+    jobs:
+      - job: RunDRTests
+        steps:
+          - checkout: self
+
+          - task: AzureKeyVault@2
+            inputs:
+              azureSubscription: "svc-connection-rg-only"
+              KeyVaultName: "dr-lab-keyvault"
+              SecretsFilter: "*"
+              RunAsPreJob: true
+
+          - script: |
+              echo "Simulating storage account failover..."
+              ./automation/scripts/test-failover.sh
+            displayName: "Test Storage Failover"
+
+          - script: |
+              echo "Simulating SQL failover..."
+              ./automation/scripts/test-failover.ps1
+            displayName: "Test SQL Failover"
