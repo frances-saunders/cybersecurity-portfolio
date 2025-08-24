@@ -15,14 +15,43 @@ import hmac
 import hashlib
 import base64
 import requests
+import subprocess
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
 # Environment variables (injected at runtime, no plaintext secrets in code)
 LOG_ANALYTICS_CUSTOMER_ID = os.environ.get("LOG_ANALYTICS_CUSTOMER_ID")
-LOG_ANALYTICS_SHARED_KEY = os.environ.get("LOG_ANALYTICS_SHARED_KEY")
+KEY_VAULT_NAME = os.environ.get("KEY_VAULT_NAME")
+SHARED_KEY_SECRET_NAME = os.environ.get("SHARED_KEY_SECRET_NAME")
 LOG_TYPE = "Zabbix_Events"
+
+
+def get_secret(vault_name: str, secret_name: str) -> str:
+    """Retrieve a secret value from Azure Key Vault via CLI."""
+    result = subprocess.run(
+        [
+            "az",
+            "keyvault",
+            "secret",
+            "show",
+            "--vault-name",
+            vault_name,
+            "--name",
+            secret_name,
+            "--query",
+            "value",
+            "-o",
+            "tsv",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.strip()
+
+
+LOG_ANALYTICS_SHARED_KEY = get_secret(KEY_VAULT_NAME, SHARED_KEY_SECRET_NAME)
 
 def build_signature(customer_id, shared_key, date, content_length, method, content_type, resource):
     x_headers = 'x-ms-date:' + date
@@ -49,10 +78,3 @@ def ingest_zabbix_event():
     headers["Authorization"] = build_signature(
         LOG_ANALYTICS_CUSTOMER_ID, LOG_ANALYTICS_SHARED_KEY,
         headers["x-ms-date"], len(content), "POST", "application/json", "/api/logs"
-    )
-
-    response = requests.post(uri, data=content, headers=headers)
-    return jsonify({"status": response.status_code, "message": "Event forwarded"})
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
