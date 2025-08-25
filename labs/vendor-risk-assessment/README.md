@@ -16,22 +16,22 @@ labs/vendor-risk-assessment/
 │
 ├── checklists/
 │   ├── vendor-evaluation-checklist.md      # Human-readable checklist
-│   ├── vendor-evaluation-checklist.json    # Machine-readable JSON
+│   └── vendor-evaluation-checklist.json    # Machine-readable JSON
 │
 ├── questionnaires/
 │   ├── vendor-risk-questionnaire.md        # Human-readable questionnaire
-│   ├── vendor-risk-questionnaire.json      # Machine-readable JSON
+│   └── vendor-risk-questionnaire.json      # Machine-readable JSON
 │
 ├── trackers/
 │   ├── poam-tracker.csv                    # Lightweight importable tracker
-│   ├── poam-tracker.json                   # JSON version for automation
+│   └── poam-tracker.json                   # JSON version for automation
 │
 ├── policies/
-│   ├── vendor-risk-policy.md               # Sanitized governance policy
+│   └── vendor-risk-policy.md               # Sanitized governance policy
 │
 ├── reports/
 │   ├── vendor-risk-assessment-case-study.md # Case study write-up
-│   ├── vendor-risk-assessment-summary.pdf   # Executive-ready sanitized report
+│   └── vendor-risk-assessment-summary.pdf   # Executive-ready sanitized report
 │
 └── README.md
 
