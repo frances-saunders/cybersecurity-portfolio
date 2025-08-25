@@ -1,0 +1,15 @@
+id: zip_and_email
+name: "Zip-and-Email Behavior (Benign Test)"
+version: "1.0"
+description: "Generates 'archive then email' activity to exercise DLP/UEBA."
+sequence:
+  - step: Create archive
+    technique: T1560
+    commands:
+      - "7z a C:\\Lab\\out\\mini.zip C:\\Lab\\samples\\*.csv -y"
+  - step: Email archive (benign recipient)
+    technique: T1114  # Email Collection/Use
+    commands:
+      - "sendmail --to lab-recipient@example.org --attach C:\\Lab\\out\\mini.zip --subject 'Lab test' --body 'Benign lab data'"
+detection_map:
+  - "../detections/exfil-abnormal-volume.kql"
