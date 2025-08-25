@@ -1,0 +1,20 @@
+{
+  "technique": "T1567.002",
+  "name": "Exfiltration Over Web Service: Exfiltration to Cloud Storage",
+  "tactic": ["exfiltration"],
+  "datasources": [
+    "Application logs: OfficeActivity/SharePoint/OneDrive",
+    "Network traffic: Proxy/Firewall",
+    "Cloud access security broker (CASB)",
+    "DLP: InformationProtectionLogs_CL"
+  ],
+  "detections": [
+    {"file": "../detections/exfil-abnormal-volume.kql", "platform": "Microsoft Sentinel"},
+    {"file": "../detections/exfiltration.spl", "platform": "Splunk"}
+  ],
+  "response_playbooks": [
+    "../playbooks/quarantine-sensitive-file.jsonc",
+    "../playbooks/suspend-user-and-revoke-tokens.jsonc"
+  ],
+  "coverage": { "visibility": "High", "detection": "High", "response": "Automated" }
+}
