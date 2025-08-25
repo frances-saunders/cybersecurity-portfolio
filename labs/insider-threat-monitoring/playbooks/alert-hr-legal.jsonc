@@ -1,0 +1,30 @@
+// Notify HR & Legal with a sanitized incident summary
+{
+  "$schema":"https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion":"1.0.0.0",
+  "resources":[
+    {
+      "type":"Microsoft.Logic/workflows",
+      "apiVersion":"2019-05-01",
+      "name":"la-alert-hr-legal",
+      "location":"[resourceGroup().location]",
+      "properties":{
+        "state":"Enabled",
+        "definition":{
+          "$schema":"https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json",
+          "triggers":{"Sentinel":{"type":"ApiConnectionWebhook","inputs":{"host":{"connection":{"name":"@parameters('$connections')['azuresentinel']['connectionId']"}},"path":"/subscribe"}}},
+          "actions":{
+            "ComposeSummary":{"type":"Compose","inputs":"@{json(string(triggerBody()?['Incident']))}"},
+            "NotifyTeams":{"type":"ApiConnection","inputs":{"host":{"connection":{"name":"@parameters('$connections')['teams']['connectionId']"}},"method":"post","path":"/messages","body":{"text":"Insider threat alert: @{outputs('ComposeSummary')?['Title']} (Severity: @{outputs('ComposeSummary')?['Severity']})"}}}
+          }
+        },
+        "parameters":{
+          "$connections":{"value":{
+            "azuresentinel":{"connectionId":"/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Web/connections/azuresentinel","connectionName":"azuresentinel"},
+            "teams":{"connectionId":"/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Web/connections/teams","connectionName":"teams"}
+          }}
+        }
+      }
+    }
+  ]
+}
