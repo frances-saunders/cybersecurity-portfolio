@@ -1,0 +1,27 @@
+// Impossible Travel detection using Entra ID SigninLogs
+// Flags consecutive sign-ins for a user where required travel speed exceeds threshold.
+let thresholdKmPerHr = 900.0;
+let window = 90m;
+
+let Enriched =
+    SigninLogs
+    | where TimeGenerated > ago(2d)
+    | extend UPN = tostring(UserPrincipalName),
+             Lat = todouble(LocationDetails.geoCoordinates.latitude),
+             Lon = todouble(LocationDetails.geoCoordinates.longitude),
+             IP = tostring(IPAddress),
+             Status = tostring(ResultType)
+    | where isnotempty(Lat) and isnotempty(Lon)
+    | project TimeGenerated, UPN, Lat, Lon, IP, Status, DeviceDetail.operatingSystem, Location = tostring(Location), ConditionalAccessStatus;
+
+Enriched
+| order by UPN asc, TimeGenerated asc
+| extend PrevTime = prev(TimeGenerated), PrevLat = prev(Lat), PrevLon = prev(Lon), PrevIP = prev(IP) by UPN
+| where PrevTime != datetime(null)
+| extend MinutesApart = datetime_diff('minute', TimeGenerated, PrevTime) * -1.0
+| where MinutesApart > 0 and MinutesApart <= toreal(todatetime(window) - datetime(1900-01-01)) // within window
+| extend Km = geo_distance_2points(PrevLon, PrevLat, Lon, Lat) / 1000.0
+| extend KmPerHr = Km / (MinutesApart / 60.0)
+| where KmPerHr >= thresholdKmPerHr
+| project TimeGenerated, UPN, PrevTime, PrevIP, IP, Km, MinutesApart, KmPerHr, operatingSystem, Location, ConditionalAccessStatus
+| order by KmPerHr desc
