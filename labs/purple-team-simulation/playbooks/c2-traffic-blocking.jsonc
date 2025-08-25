@@ -1,0 +1,60 @@
+// Blocks suspected C2 indicators via Firewall/NSG and posts to change log.
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2019-05-01",
+      "name": "la-c2-traffic-blocking",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "state": "Enabled",
+        "definition": {
+          "$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json",
+          "triggers": {
+            "SentinelIncident": {
+              "type": "ApiConnectionWebhook",
+              "inputs": { "host": { "connection": { "name": "@parameters('$connections')['azuresentinel']['connectionId']" } }, "path": "/subscribe" }
+            }
+          },
+          "actions": {
+            "Extract_IOCs": {
+              "type": "Compose",
+              "inputs": "@{triggerBody()?['Entities']}"
+            },
+            "Block_IPs_in_AzureFirewall": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": { "connection": { "name": "@parameters('$connections')['azureResourceManager']['connectionId']" } },
+                "method": "post",
+                "path": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/azureFirewalls/<fw>/blockIndicators",
+                "body": { "ips": "@{outputs('Extract_IOCs')}" }
+              },
+              "runAfter": { "Extract_IOCs": [ "Succeeded" ] }
+            },
+            "Notify_Change_Log": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": { "connection": { "name": "@parameters('$connections')['teams']['connectionId']" } },
+                "method": "post",
+                "path": "/messages",
+                "body": { "text": "Blocked suspected C2 indicators from Sentinel incident." }
+              },
+              "runAfter": { "Block_IPs_in_AzureFirewall": [ "Succeeded", "Failed" ] }
+            }
+          }
+        },
+        "parameters": {
+          "$connections": {
+            "value": {
+              "azuresentinel": { "connectionId": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Web/connections/azuresentinel", "connectionName": "azuresentinel" },
+              "azureResourceManager": { "connectionId": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Web/connections/arm", "connectionName": "arm" },
+              "teams": { "connectionId": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Web/connections/teams", "connectionName": "teams" }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
