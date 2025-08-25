@@ -1,0 +1,18 @@
+/* Lateral Movement (WMI, Remote Service, Admin$)
+   Techniques: T1047 (WMI), T1021.002 (SMB/Service), RDP patterns
+   Tune for your sourcetypes: WinEventLog:Security, Sysmon:EventCode=3, Windows:EventLog:System
+*/
+index=windows earliest=-24h
+| eval tactic="Lateral Movement"
+| search (
+    (sourcetype="WinEventLog:Security" EventCode=4624 Logon_Type=3)
+    OR (sourcetype="WinEventLog:Security" EventCode=4672)
+    OR (sourcetype="WinEventLog:System" EventCode=7045)  /* Service installed */
+    OR (sourcetype="XmlWinEventLog:Microsoft-Windows-WMI-Activity/Operational" EventID=5857 OR EventID=5858)
+    OR (sourcetype="Sysmon" EventCode=3 (DestinationPort=445 OR DestinationPort=135))
+  )
+| stats values(Account_Name) as accounts, values(Workstation_Name) as src_hosts, values(DestinationIp) as dst_ips, min(_time) as firstSeen, max(_time) as lastSeen by ComputerName, EventCode, Process_Name, CommandLine
+| eval technique=case(EventCode=7045,"T1021.002", like(CommandLine,"%wmic%"),"T1047", like(CommandLine,"%psexec%"),"T1021.002", 1=1,"T1021/T1047")
+| eval severity=if(EventCode=7045 OR like(CommandLine,"%psexec%"),"high","medium")
+| table lastSeen, ComputerName, accounts, src_hosts, dst_ips, Process_Name, CommandLine, tactic, technique, severity
+| sort - lastSeen
