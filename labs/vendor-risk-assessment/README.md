@@ -15,19 +15,26 @@ All artifacts are sanitized to remove sensitive data but preserve the structure 
 labs/vendor-risk-assessment/
 │
 ├── checklists/
-│ ├── vendor-evaluation-checklist.xlsx
-│ ├── vendor-risk-questionnaire.xlsx
+│   ├── vendor-evaluation-checklist.md      # Human-readable checklist
+│   ├── vendor-evaluation-checklist.json    # Machine-readable JSON
+│
+├── questionnaires/
+│   ├── vendor-risk-questionnaire.md        # Human-readable questionnaire
+│   ├── vendor-risk-questionnaire.json      # Machine-readable JSON
 │
 ├── trackers/
-│ ├── poam-tracker.xlsx
+│   ├── poam-tracker.csv                    # Lightweight importable tracker
+│   ├── poam-tracker.json                   # JSON version for automation
 │
 ├── policies/
-│ ├── vendor-risk-policy.md
+│   ├── vendor-risk-policy.md               # Sanitized governance policy
 │
 ├── reports/
-│ ├── vendor-risk-assessment-case-study.md
+│   ├── vendor-risk-assessment-case-study.md # Case study write-up
+│   ├── vendor-risk-assessment-summary.pdf   # Executive-ready sanitized report
 │
 └── README.md
+
 ```
 
 ---
