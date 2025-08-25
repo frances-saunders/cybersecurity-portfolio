@@ -1,0 +1,33 @@
+// Sentinel-triggered Logic App: suspend user + revoke tokens for high-confidence insider exfil
+{
+  "$schema":"https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion":"1.0.0.0",
+  "resources":[
+    {
+      "type":"Microsoft.Logic/workflows",
+      "apiVersion":"2019-05-01",
+      "name":"la-suspend-user-revoke-tokens",
+      "location":"[resourceGroup().location]",
+      "properties":{
+        "state":"Enabled",
+        "definition":{
+          "$schema":"https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json",
+          "triggers":{
+            "SentinelIncident":{"type":"ApiConnectionWebhook","inputs":{"host":{"connection":{"name":"@parameters('$connections')['azuresentinel']['connectionId']"}},"path":"/subscribe"}}
+          },
+          "actions":{
+            "GetUser":{"type":"Compose","inputs":"@{triggerBody()?['Entities']?[0]?['UserPrincipalName']}"},
+            "RevokeSessions":{"type":"ApiConnection","inputs":{"host":{"connection":{"name":"@parameters('$connections')['graph']['connectionId']"}},"method":"post","path":"/v1.0/users/@{outputs('GetUser')}/revokeSignInSessions"}},
+            "DisableUser":{"type":"ApiConnection","inputs":{"host":{"connection":{"name":"@parameters('$connections')['graph']['connectionId']"}},"method":"patch","path":"/v1.0/users/@{outputs('GetUser')}","body":{"accountEnabled":false}},"runAfter":{"RevokeSessions":["Succeeded","Failed"]}}
+          }
+        },
+        "parameters":{
+          "$connections":{"value":{
+            "azuresentinel":{"connectionId":"/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Web/connections/azuresentinel","connectionName":"azuresentinel"},
+            "graph":{"connectionId":"/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Web/connections/graph","connectionName":"graph"}
+          }}
+        }
+      }
+    }
+  ]
+}
