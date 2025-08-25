@@ -1,70 +1,67 @@
-# Vendor Evaluation Checklist
+# Vendor Risk Questionnaire
 
-This checklist is used to perform a structured review of a vendor’s security, compliance, and governance maturity.
-
----
-
-## 1. Security Program & Governance
-- [ ] Written Information Security Policy maintained and reviewed annually
-- [ ] Dedicated CISO or equivalent security leader
-- [ ] Security program reviewed annually by executive leadership
-- [ ] Security awareness training conducted at least annually
-- [ ] Background checks performed on all employees with sensitive access
+This questionnaire is issued to third-party vendors to assess their security and compliance posture.
 
 ---
 
-## 2. Identity & Access Management (IAM)
-- [ ] Supports Single Sign-On (SSO) via SAML, OAuth, or OpenID Connect
-- [ ] Role-based access control (RBAC) enforced
-- [ ] Multi-factor authentication (MFA) enforced for all accounts
-- [ ] Timely deprovisioning of terminated users
-- [ ] Access reviews conducted quarterly
+## Section 1 – Security Governance
+- Do you maintain a dedicated security team (e.g., CISO, Security Officers)?  
+- Do you conduct annual security risk assessments?  
+- Do you require employees to undergo background checks?  
+- Do you provide mandatory annual security awareness training?  
 
 ---
 
-## 3. Data Protection
-- [ ] Data encrypted at rest with AES-256 or stronger
-- [ ] Data encrypted in transit with TLS 1.2+ (preferably TLS 1.3)
-- [ ] Customer data logically segregated from other tenants
-- [ ] Secure key management via HSM/KMS
-- [ ] Documented data retention and deletion policies
+## Section 2 – Identity & Access Management
+- Do you support SSO (SAML, OAuth, OpenID Connect)?  
+- Is MFA required for all user accounts (not just admins)?  
+- Do you enforce role-based access control (RBAC)?  
+- How quickly are terminated users deprovisioned?  
+- Are access rights reviewed periodically?  
 
 ---
 
-## 4. Application & Infrastructure Security
-- [ ] Secure Software Development Lifecycle (SDLC) documented
-- [ ] Threat modeling performed for major releases
-- [ ] Regular vulnerability scanning performed
-- [ ] Independent penetration testing (annual or more frequent)
-- [ ] Documented patch management and remediation SLA
-- [ ] Cloud infrastructure aligned with CIS Benchmarks
+## Section 3 – Data Protection
+- How is customer data encrypted at rest?  
+- How is data encrypted in transit?  
+- Is customer data logically separated from other tenants?  
+- What key management solution do you use (e.g., HSM, KMS)?  
+- What is your data retention and deletion policy?  
 
 ---
 
-## 5. Incident Response & Business Continuity
-- [ ] Documented Incident Response (IR) plan
-- [ ] Breach notification SLA defined (e.g., 72 hours)
-- [ ] Disaster Recovery (DR) testing conducted annually
-- [ ] Recovery Time Objective (RTO) defined and acceptable
-- [ ] Recovery Point Objective (RPO) defined and acceptable
-- [ ] Business Continuity Plan (BCP) tested annually
+## Section 4 – Application & Infrastructure Security
+- Do you follow a documented Secure Development Lifecycle (SDLC)?  
+- Do you conduct threat modeling on major releases?  
+- How often do you perform vulnerability scans?  
+- Do you perform independent penetration tests?  
+- What is your patch management SLA?  
+- Do you align your cloud infrastructure with CIS Benchmarks?  
 
 ---
 
-## 6. Third-Party & Supply Chain Management
-- [ ] Vendor performs due diligence on subcontractors
-- [ ] Right-to-audit clauses included in contracts
-- [ ] Data residency and sovereignty requirements supported
-- [ ] Supplier code of conduct in place
-- [ ] Continuous monitoring of high-risk third parties
+## Section 5 – Incident Response & Business Continuity
+- Do you maintain a documented incident response plan?  
+- What is your SLA for breach notification?  
+- When was your last disaster recovery test?  
+- What is your RTO (Recovery Time Objective)?  
+- What is your RPO (Recovery Point Objective)?  
+- Do you test your business continuity plan annually?  
 
 ---
 
-## 7. Privacy & Compliance
-- [ ] GDPR compliance (Data Processing Agreement, SCCs if applicable)
-- [ ] HIPAA compliance (if handling PHI)
-- [ ] CCPA compliance (if handling California residents’ data)
-- [ ] PCI DSS compliance (if handling payment card data)
-- [ ] FedRAMP/StateRAMP authorization (if servicing government clients)
-- [ ] ISO/IEC 27001 certification
-- [ ] SOC 2 Type II report available
+## Section 6 – Third-Party Risk Management
+- Do you assess your subcontractors for security risks?  
+- Do your contracts include right-to-audit clauses?  
+- How do you ensure compliance with data residency laws (e.g., GDPR)?  
+- Do you maintain a supplier code of conduct?  
+- Do you continuously monitor your high-risk vendors?  
+
+---
+
+## Section 7 – Compliance & Privacy
+- Do you provide a current SOC 2 Type II report?  
+- Are you ISO/IEC 27001 certified?  
+- Are you compliant with GDPR, HIPAA, or CCPA (as applicable)?  
+- Do you maintain PCI DSS compliance (if processing payments)?  
+- Do you have FedRAMP/StateRAMP authorization (if applicable)?  
