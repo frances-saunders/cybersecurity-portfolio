@@ -1,65 +1,82 @@
 # 3-Year Security Maturity Roadmap
 
-This roadmap provides a phased approach to maturing enterprise security, aligned with **NIST CSF**, **CMMI**, and **ISO 27001**. It is designed to balance foundational improvements with advanced resilience, ensuring both operational impact and executive visibility.
+This roadmap provides a phased approach to maturing enterprise security, aligned with **NIST CSF**, **CMMI**, **ISO 27001**, and **enterprise risk management (ERM)** principles. It balances **technology, people, and process** investments with measurable business outcomes.
 
 ---
 
 ## Year 1 – Foundation (Stabilize & Standardize)
 
 **Objectives**
-* Establish governance, risk, and compliance baseline.
-* Centralize identity and access management.
-* Improve vulnerability and patch management.
-* Begin SOC uplift with tiered detections and automation.
+* Establish governance, risk, and compliance baseline across all business units.
+* Centralize identity and access management (IAM) with enforced MFA and SSO.
+* Mature patch/vulnerability management tied to SLAs and risk appetite.
+* Begin SOC uplift with automation for high-volume incident types.
 
 **Key Initiatives**
-* Deploy centralized IAM and enforce MFA across enterprise.
-* Launch vulnerability management program with SLA-based remediation.
-* Conduct enterprise-wide risk assessment against NIST CSF.
-* SOC 2.0 uplift: enable correlation rules, begin automated response playbooks.
+* Deploy centralized IAM solution; decommission legacy auth systems.
+* Launch risk-based vulnerability management program with defined SLA tiers (Critical: 15 days, High: 30 days).
+* Conduct enterprise-wide risk assessment aligned with **NIST CSF** and **ISO 27005 risk methodology**.
+* Expand SOC staffing to 24x7 coverage, train Tier 1 analysts, deploy first wave of SOAR playbooks.
+
+**Budget & Staffing**
+* 10% budget uplift allocated for IAM and SOC automation.
+* SOC team expansion from 8 FTE → 12 FTE.
+* Annual training plan for SOC analysts and IT admins on new IAM and security tools.
 
 **Expected Outcomes**
-* Security posture moves from **Ad-Hoc (Level 1)** to **Defined (Level 2)**.
+* Security maturity improves from **Ad-Hoc (Level 1)** to **Defined (Level 2)**.
 * 30% reduction in unpatched critical vulnerabilities.
-* SOC achieves consistent Tier 1/2 coverage with automation for common incidents.
-
+* SOC handles 40% of Tier 1 incidents via automation.
+* First formalized risk register integrated with enterprise risk management program.
 ---
 
 ## Year 2 – Integration (Enhance & Expand)
 
 **Objectives**
-* Integrate Zero Trust principles across workloads, users, and data.
-* Mature threat hunting and UEBA capabilities.
-* Improve vendor risk management and third-party assurance.
+* Implement **Zero Trust** controls across workloads, users, and data.
+* Mature threat hunting and UEBA capabilities within the SOC.
+* Expand vendor risk management and third-party assurance.
+* Embed regulatory compliance into day-to-day operations.
 
 **Key Initiatives**
-* Deploy DLP and UEBA tools integrated with SIEM.
-* Implement Zero Trust segmentation across networks and cloud workloads.
-* Vendor Risk Program: launch due diligence questionnaires, monitoring, and remediation tracking.
-* Conduct red team vs. blue team exercises for detection validation.
+* Roll out DLP and UEBA integrated with SIEM/SOAR.
+* Apply Zero Trust segmentation for crown jewel systems and hybrid workloads.
+* Vendor Risk Program: integrate continuous monitoring of suppliers with quarterly reporting to Procurement.
+* Conduct red team vs. blue team exercises; report outcomes to the Audit & Risk Committee.
+
+**Budget & Staffing**
+* 15% budget uplift for Zero Trust and UEBA tooling.
+* SOC and Threat Hunting team grows from 12 FTE → 18 FTE.
+* Establish dedicated Vendor Risk Manager role within Security GRC.
 
 **Expected Outcomes**
-* Security posture moves from **Defined (Level 2)** to **Managed (Level 3)**.
-* 50% faster Mean Time to Detect (MTTD).
-* 70% of third parties assessed and risk-mitigated.
+* Security maturity improves from **Defined (Level 2)** to **Managed (Level 3)**.
+* MTTD reduced by 50% (20 days → 10 days).
+* 70% of third parties assessed and monitored with continuous scoring.
+* Business achieves compliance readiness for **GDPR** and **CCPA** audit inquiries.
 
 ---
 
 ## Year 3 – Optimization (Resilience & Continuous Improvement)
 
 **Objectives**
-* Optimize security through automation and risk quantification.
-* Align security outcomes with business resilience.
-* Achieve external certifications (e.g., ISO 27001, SOC 2 Type 2).
+* Optimize security through automation, cyber risk quantification, and board-level metrics.
+* Institutionalize resilience across IT and business operations.
+* Achieve recognized external certifications to validate maturity.
 
 **Key Initiatives**
-* Cyber Risk Quantification framework for business alignment.
-* Expand red team simulations with focus on nation-state threat emulation.
-* Automate compliance reporting across frameworks (NIST, ISO, CIS).
-* Formalize crisis management and enterprise resilience program.
+* Implement cyber risk quantification using **FAIR framework**; tie residual risk to business financial impact.
+* Expand red team simulations to include nation-state threat emulation.
+* Automate compliance mapping across NIST, ISO, and CIS controls.
+* Formalize Crisis Management program; integrate tabletop exercises with business continuity plans.
+
+**Budget & Staffing**
+* 12% incremental budget increase with 40% allocated to automation.
+* SOC and Threat Hunting team stabilize at 20 FTE with dedicated cyber risk quant analyst.
+* Security program costs benchmarked and justified against **industry peers (Gartner/ISF data)**.
 
 **Expected Outcomes**
-* Security posture moves from **Managed (Level 3)** to **Optimized (Level 4/5)**.
-* 80% reduction in SLA breaches for vulnerability management.
-* Board-level dashboards reflect risk-adjusted investment ROI.
-* Enterprise achieves ISO 27001 certification.
+* Security maturity improves from **Managed (Level 3)** to **Optimized (Level 4/5)**.
+* SLA breaches for critical vulnerabilities reduced by 80%.
+* Quantified risk reporting adopted by Board Audit & Risk Committee.
+* Enterprise achieves **ISO 27001 certification** and demonstrates continuous improvement.
