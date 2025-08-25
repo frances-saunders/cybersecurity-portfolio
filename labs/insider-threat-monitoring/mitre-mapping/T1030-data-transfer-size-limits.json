@@ -1,0 +1,14 @@
+{
+  "technique": "T1030",
+  "name": "Data Transfer Size Limits",
+  "tactic": ["exfiltration"],
+  "datasources": ["Proxy/Firewall logs", "CASB events"],
+  "detections": [
+    {"file": "../detections/exfiltration.spl", "platform": "Splunk"}
+  ],
+  "response_playbooks": [
+    "../playbooks/could-be-flagged-by-proxy-blocking.jsonc"
+  ],
+  "coverage": { "visibility": "Medium", "detection": "Medium", "response": "Manual" },
+  "notes": "Adversaries throttle to evade thresholds; pair with time-series UEBA."
+}
