@@ -1,0 +1,93 @@
+id: apt29_simulation
+name: "APT29-Inspired End-to-End Simulation"
+version: "1.0"
+description: >
+  Controlled purple-team exercise emulating a stealthy intrusion: initial access,
+  credential access, lateral movement, and exfiltration. Uses Atomic Red Team tests
+  and clearly marked clean-up steps. Do NOT run in production.
+
+safety:
+  requires_isolated_lab: true
+  execution_window: "off-hours"
+  approvals: ["PurpleTeamLead", "SOCManager"]
+  logging: ["LocalEvtLogs", "Sysmon", "EDR", "Sentinel/LA"]
+
+stages:
+  - stage: Initial Access
+    objectives:
+      - "Simulate execution from user context to seed telemetry."
+    steps:
+      - technique: T1059.001 # PowerShell
+        tool: "Atomic Red Team"
+        atomic_id: "T1059.001-1"
+        commands:
+          - "Invoke-AtomicTest T1059.001 -TestNumbers 1 -GetPrereqs"
+          - "Invoke-AtomicTest T1059.001 -TestNumbers 1"
+        detection_map:
+          - detections/credential-access.kql
+        cleanup:
+          - "Invoke-AtomicTest T1059.001 -TestNumbers 1 -Cleanup"
+
+  - stage: Credential Access
+    objectives:
+      - "Trigger credential dumping behaviors without exposing real credentials."
+    steps:
+      - technique: T1003.001 # LSASS Memory
+        tool: "Atomic Red Team"
+        atomic_id: "T1003.001-1"
+        commands:
+          - "Invoke-AtomicTest T1003.001 -TestNumbers 1 -GetPrereqs"
+          - "Invoke-AtomicTest T1003.001 -TestNumbers 1"
+        detection_map:
+          - detections/credential-access.kql
+        cleanup:
+          - "Invoke-AtomicTest T1003.001 -TestNumbers 1 -Cleanup"
+
+  - stage: Lateral Movement
+    objectives:
+      - "Generate Windows remote exec telemetry (WMI/SMB/RDP)."
+    steps:
+      - technique: T1047 # WMI
+        tool: "Atomic Red Team"
+        atomic_id: "T1047-1"
+        commands:
+          - "Invoke-AtomicTest T1047 -TestNumbers 1 -GetPrereqs"
+          - "Invoke-AtomicTest T1047 -TestNumbers 1 -InputArgs @{ remote_host='#{TARGET_HOST}' }"
+        detection_map:
+          - detections/persistence-techniques.kql
+          - detections/lateral-movement.spl
+        cleanup:
+          - "Invoke-AtomicTest T1047 -TestNumbers 1 -Cleanup"
+
+      - technique: T1021.002 # SMB/Service
+        tool: "Atomic Red Team"
+        atomic_id: "T1021.002-1"
+        commands:
+          - "Invoke-AtomicTest T1021.002 -TestNumbers 1 -GetPrereqs"
+          - "Invoke-AtomicTest T1021.002 -TestNumbers 1 -InputArgs @{ remote_host='#{TARGET_HOST}' }"
+        detection_map:
+          - detections/lateral-movement.spl
+        cleanup:
+          - "Invoke-AtomicTest T1021.002 -TestNumbers 1 -Cleanup"
+
+  - stage: Exfiltration (Benign)
+    objectives:
+      - "Simulate outbound beacon or exfil pattern with harmless data."
+    steps:
+      - technique: T1041 # Exfil over C2 Channel
+        tool: "Atomic Red Team"
+        atomic_id: "T1041-1"
+        commands:
+          - "Invoke-AtomicTest T1041 -TestNumbers 1 -GetPrereqs"
+          - "Invoke-AtomicTest T1041 -TestNumbers 1"
+        detection_map:
+          - detections/credential-access.kql
+        cleanup:
+          - "Invoke-AtomicTest T1041 -TestNumbers 1 -Cleanup"
+
+inputs:
+  TARGET_HOST: "LAB-WS02"
+
+notes:
+  - "Run Invoke-AtomicTest modules from a privileged lab controller only."
+  - "Ensure Sysmon and EDR enabled; forward logs to Sentinel/LA."
