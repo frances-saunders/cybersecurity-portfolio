@@ -1,0 +1,24 @@
+id: lateral_movement_sequence
+name: "Lateral Movement via WMI and Service Control"
+version: "1.0"
+description: "Simulate remote execution using WMI and Service creation over SMB."
+sequence:
+  - technique: T1047
+    commands:
+      - "Invoke-AtomicTest T1047 -TestNumbers 1 -InputArgs @{ remote_host='#{TARGET_HOST}' }"
+    detection_map:
+      - "../detections/persistence-techniques.kql"
+      - "../detections/lateral-movement.spl"
+    cleanup:
+      - "Invoke-AtomicTest T1047 -TestNumbers 1 -Cleanup"
+
+  - technique: T1021.002
+    commands:
+      - "Invoke-AtomicTest T1021.002 -TestNumbers 1 -InputArgs @{ remote_host='#{TARGET_HOST}' }"
+    detection_map:
+      - "../detections/lateral-movement.spl"
+    cleanup:
+      - "Invoke-AtomicTest T1021.002 -TestNumbers 1 -Cleanup"
+
+inputs:
+  TARGET_HOST: "LAB-SRV01"
