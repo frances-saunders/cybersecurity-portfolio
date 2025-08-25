@@ -1,0 +1,27 @@
+{
+  "technique": "T1078",
+  "name": "Valid Accounts",
+  "tactic": ["initial-access", "persistence", "privilege-escalation", "defense-evasion"],
+  "datasources": [
+    "Authentication Logs (4624/4625)",
+    "Azure AD Sign-in Logs",
+    "Directory Services (4720/4722/4725)",
+    "MFA Events",
+    "Conditional Access"
+  ],
+  "detections": [
+    {"file": "../detections/credential-access.kql", "platform": "Azure Sentinel"},
+    {"file": "../detections/lateral-movement.spl", "platform": "Splunk"}
+  ],
+  "response_playbooks": [
+    "../playbooks/revoke-stolen-credentials.jsonc",
+    "../playbooks/c2-traffic-blocking.jsonc"
+  ],
+  "coverage": {
+    "visibility": "High",
+    "detection": "Medium",
+    "response": "Semi-automated"
+  },
+  "notes": "Monitor unfamiliar locations, impossible travel, and service principal abuse."
+}
+
