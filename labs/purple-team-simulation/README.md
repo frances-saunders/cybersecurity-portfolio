@@ -10,6 +10,7 @@ Detection queries and automated responses are developed to **validate SOC visibi
 ---
 
 ## Lab Structure
+```
 labs/purple-team-simulation/
 │
 ├── adversary-playbook/                 # Simulated APT attack steps (JSON / YAML)
@@ -38,7 +39,7 @@ labs/purple-team-simulation/
 │   └── hunt-automation.py              # Execute queries + log findings
 │
 └── README.md
-
+```
 ---
 
 ## Tools & Technologies
