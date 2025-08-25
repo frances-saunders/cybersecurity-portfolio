@@ -1,0 +1,14 @@
+id: impossible_travel_admin
+name: "Impossible Travel (Admin Account)"
+version: "1.0"
+description: "Creates consecutive sign-ins from distant locations on a test tenant account."
+prereqs:
+  - "Use test account with no production access."
+  - "Generate geo-diverse sign-ins via VPN endpoints approved for lab."
+telemetry_sources:
+  - SigninLogs
+sequence:
+  - step: Sign-in from Region A (US-East)
+  - step: Within 30 minutes, sign-in from Region B (EU-West)
+detection_map:
+  - "../detections/impossible-travel.kql"
