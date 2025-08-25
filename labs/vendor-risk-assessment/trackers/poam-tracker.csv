@@ -1,4 +1,11 @@
 Risk_ID,Description,Severity,Owner,Due_Date,Status
-VR-001,Vendor does not provide SOC 2 Type II,High,Security Team,2025-09-30,Open
+VR-001,Vendor does not provide SOC 2 Type II certification,High,Security Team,2025-09-30,Open
 VR-002,Vendor encryption only supports TLS 1.0,High,Vendor CISO,2025-10-15,In Progress
 VR-003,No evidence of annual penetration test,Medium,Vendor Security,2025-11-01,Planned
+VR-004,No MFA for non-administrative user accounts,High,Vendor IT,2025-09-20,Open
+VR-005,Vendor does not conduct quarterly access reviews,Medium,Vendor IAM Team,2025-12-15,Planned
+VR-006,Incident Response plan not tested in past 12 months,Medium,Vendor Security Ops,2025-11-30,Planned
+VR-007,Disaster Recovery test not conducted annually,High,Vendor IT Ops,2025-10-25,Open
+VR-008,Data retention policy not defined/documented,Medium,Vendor Compliance,2025-12-01,Planned
+VR-009,Vendor has no subcontractor risk assessment program,High,Vendor Risk Manager,2025-10-10,Open
+VR-010,No evidence of security awareness training for employees,Medium,Vendor HR,2025-11-15,Planned
