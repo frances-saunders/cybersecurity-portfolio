@@ -2,7 +2,7 @@
   "poam_tracker": [
     {
       "risk_id": "VR-001",
-      "description": "Vendor does not provide SOC 2 Type II",
+      "description": "Vendor does not provide SOC 2 Type II certification",
       "severity": "High",
       "owner": "Security Team",
       "due_date": "2025-09-30",
@@ -22,6 +22,62 @@
       "severity": "Medium",
       "owner": "Vendor Security",
       "due_date": "2025-11-01",
+      "status": "Planned"
+    },
+    {
+      "risk_id": "VR-004",
+      "description": "No MFA for non-administrative user accounts",
+      "severity": "High",
+      "owner": "Vendor IT",
+      "due_date": "2025-09-20",
+      "status": "Open"
+    },
+    {
+      "risk_id": "VR-005",
+      "description": "Vendor does not conduct quarterly access reviews",
+      "severity": "Medium",
+      "owner": "Vendor IAM Team",
+      "due_date": "2025-12-15",
+      "status": "Planned"
+    },
+    {
+      "risk_id": "VR-006",
+      "description": "Incident Response plan not tested in past 12 months",
+      "severity": "Medium",
+      "owner": "Vendor Security Ops",
+      "due_date": "2025-11-30",
+      "status": "Planned"
+    },
+    {
+      "risk_id": "VR-007",
+      "description": "Disaster Recovery test not conducted annually",
+      "severity": "High",
+      "owner": "Vendor IT Ops",
+      "due_date": "2025-10-25",
+      "status": "Open"
+    },
+    {
+      "risk_id": "VR-008",
+      "description": "Data retention policy not defined/documented",
+      "severity": "Medium",
+      "owner": "Vendor Compliance",
+      "due_date": "2025-12-01",
+      "status": "Planned"
+    },
+    {
+      "risk_id": "VR-009",
+      "description": "Vendor has no subcontractor risk assessment program",
+      "severity": "High",
+      "owner": "Vendor Risk Manager",
+      "due_date": "2025-10-10",
+      "status": "Open"
+    },
+    {
+      "risk_id": "VR-010",
+      "description": "No evidence of security awareness training for employees",
+      "severity": "Medium",
+      "owner": "Vendor HR",
+      "due_date": "2025-11-15",
       "status": "Planned"
     }
   ]
