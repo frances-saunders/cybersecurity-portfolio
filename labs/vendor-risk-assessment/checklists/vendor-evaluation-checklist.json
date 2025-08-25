@@ -1,0 +1,21 @@
+{
+  "vendor_evaluation": {
+    "general_information": {
+      "soc2_type2": true,
+      "iso27001_certified": true,
+      "penetration_testing_last_12_months": false
+    },
+    "security_controls": {
+      "encryption_at_rest": "AES-256",
+      "encryption_in_transit": "TLS 1.2+",
+      "mfa_for_admins": true,
+      "logging_monitoring": true,
+      "incident_response_plan": true
+    },
+    "compliance_governance": {
+      "gdpr_compliant": true,
+      "hipaa_compliant": false,
+      "fedramp": "Moderate"
+    }
+  }
+}
