@@ -19,7 +19,6 @@ labs/security-roadmap/
 ├── roadmap.md                            # 3-year phased security roadmap
 ├── leadership-summary.md                 # Plain-language executive summary
 ├── metrics-framework.md                  # KPI/KRI definitions & alignment
-├── executive-presentation.pdf            # Sanitized executive-ready slide deck
 └── README.md                             # Lab documentation
 ```
 
