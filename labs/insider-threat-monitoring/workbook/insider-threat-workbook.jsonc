@@ -1,0 +1,59 @@
+// Microsoft Sentinel Workbook: Insider Threat Monitoring (UEBA + DLP)
+// Import in Sentinel Workbooks; adjust resource ids and queries as needed.
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": { "json": "## Insider Threat & Data Protection Dashboard" }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "let evalWindow=24h; OfficeActivity | where TimeGenerated > ago(evalWindow) and Operation in ('FileDownloaded','FileUploaded') | summarize Downloads=countif(Operation=='FileDownloaded'), Uploads=countif(Operation=='FileUploaded')",
+        "size": 0,
+        "chart": { "type": 0 }
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "// Top users by 24h exfil spike\n" +
+                 "let lookback=14d; let evalWindow=24h; let minEvents=30; let spikeFactor=5.0; let minSpikeCount=200;\n" +
+                 "let OA = OfficeActivity | where TimeGenerated>ago(lookback) | where Operation in ('FileDownloaded','FileUploaded') | project TimeGenerated, User=tostring(UserId), Action=tostring(Operation);\n" +
+                 "let Baseline = OA | summarize BaselineCountPerDay=count()/14.0 by User | where BaselineCountPerDay>=minEvents;\n" +
+                 "let Current = OA | where TimeGenerated>ago(evalWindow) | summarize CurrentCount=count() by User;\n" +
+                 "Current | join kind=inner Baseline on User | extend Spike=CurrentCount/BaselineCountPerDay | where CurrentCount>=minSpikeCount and Spike>=spikeFactor | project User, CurrentCount, Spike | top 10 by Spike desc",
+        "size": 1,
+        "chart": { "type": 3 }
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "// DLP incidents (last 7d)\nInformationProtectionLogs_CL | where TimeGenerated > ago(7d) | project TimeGenerated, Policy=tostring(Policy_s), User=tostring(User_s), File=tostring(FileName_s), Action=tostring(Operation_s) | top 50 by TimeGenerated desc",
+        "size": 1,
+        "chart": { "type": 0 }
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "// Impossible Travel high-speed events (last 48h)\n" +
+                 "let thresholdKmPerHr=900.0; let window=90m;\n" +
+                 "let E = SigninLogs | where TimeGenerated>ago(2d) | extend UPN=tostring(UserPrincipalName), Lat=todouble(LocationDetails.geoCoordinates.latitude), Lon=todouble(LocationDetails.geoCoordinates.longitude) | where isnotempty(Lat) and isnotempty(Lon) | project TimeGenerated, UPN, Lat, Lon;\n" +
+                 "E | order by UPN asc, TimeGenerated asc | extend PrevTime=prev(TimeGenerated), PrevLat=prev(Lat), PrevLon=prev(Lon) by UPN | where PrevTime != datetime(null)\n" +
+                 "| extend MinutesApart=datetime_diff('minute', TimeGenerated, PrevTime) * -1.0 | where MinutesApart>0 and MinutesApart<=90\n" +
+                 "| extend Km=geo_distance_2points(PrevLon, PrevLat, Lon, Lat)/1000.0 | extend KmPerHr=Km/(MinutesApart/60.0) | where KmPerHr>=thresholdKmPerHr\n" +
+                 "| project TimeGenerated, UPN, Km, MinutesApart, KmPerHr | top 20 by KmPerHr desc",
+        "size": 1,
+        "chart": { "type": 0 }
+      }
+    }
+  ],
+  "fallbackResourceIds": []
+}
