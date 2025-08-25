@@ -1,0 +1,74 @@
+// Azure Logic App: Isolate Compromised Host (Defender for Endpoint)
+// Triggered by Sentinel incident; isolates host and posts to Teams.
+// Secrets: use managed identity or Key Vault-referenced connections.
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "workflowName": { "type": "string", "defaultValue": "la-isolate-compromised-host" }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2019-05-01",
+      "name": "[parameters('workflowName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "state": "Enabled",
+        "definition": {
+          "$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json",
+          "contentVersion": "1.0.0.0",
+          "parameters": { },
+          "triggers": {
+            "When_a_response_to_an_Azure_Sentinel_alert_is_triggered": {
+              "type": "ApiConnectionWebhook",
+              "inputs": {
+                "path": "/subscribe",
+                "host": { "connection": { "name": "@parameters('$connections')['azuresentinel']['connectionId']" } }
+              }
+            }
+          },
+          "actions": {
+            "Extract_DeviceName": {
+              "type": "Compose",
+              "inputs": "@{body('When_a_response_to_an_Azure_Sentinel_alert_is_triggered')?['Entities']?[0]?['HostName']}"
+            },
+            "MDE_Isolate_Machine": {
+              "type": "Http",
+              "inputs": {
+                "method": "POST",
+                "uri": "https://api.securitycenter.microsoft.com/api/machines/@{outputs('Extract_DeviceName')}/isolate",
+                "headers": {
+                  "Authorization": "Bearer @{listCallbackUrl()}", // placeholder; use managed connection in real deployment
+                  "Content-Type": "application/json"
+                },
+                "body": { "Comment": "Automated isolation from Sentinel playbook", "IsolationType": "Full" }
+              },
+              "runAfter": { "Extract_DeviceName": [ "Succeeded" ] }
+            },
+            "Post_Teams_Notice": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": { "connection": { "name": "@parameters('$connections')['teams']['connectionId']" } },
+                "path": "/v3/conversations",
+                "method": "post",
+                "body": {
+                  "text": "Host @{outputs('Extract_DeviceName')} isolated via automated playbook."
+                }
+              },
+              "runAfter": { "MDE_Isolate_Machine": [ "Succeeded", "Failed" ] }
+            }
+          }
+        },
+        "parameters": {
+          "$connections": {
+            "value": {
+              "azuresentinel": { "connectionId": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Web/connections/azuresentinel", "connectionName": "azuresentinel" },
+              "teams": { "connectionId": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Web/connections/teams", "connectionName": "teams" }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
