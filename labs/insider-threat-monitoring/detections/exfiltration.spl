@@ -1,0 +1,18 @@
+/* Insider Threat: Unusual outbound volume to file-sharing apps (proxy/firewall logs)
+   Adjust sourcetypes/fields: bytes_out, app, url, user, src_ip
+*/
+index=proxy OR index=firewall earliest=-14d
+| eval day=strftime(_time, "%Y-%m-%d")
+| eval is_fileshare=if(like(app,"%onedrive%") OR like(app,"%dropbox%") OR like(app,"%box%") OR like(url,"%drive.google.com%"), 1, 0)
+| eventstats sum(bytes_out) as bytes_out_user_day by user, day
+| where is_fileshare=1
+| stats sum(bytes_out) as bytes_out_24h by user
+| join user [ search index=proxy OR index=firewall earliest=-14d latest=-24h
+  | where is_fileshare=1
+  | stats sum(bytes_out) as bytes_out_baseline by user
+  | eval avg_daily=bytes_out_baseline/14 ]
+| eval spike=round(bytes_out_24h/avg_daily,2)
+| where bytes_out_24h>104857600 AND spike>=5    /* >100MB and >=5x baseline */
+| eval severity=if(spike>=15,"high","medium")
+| table _time user bytes_out_24h avg_daily spike severity
+| sort - spike
