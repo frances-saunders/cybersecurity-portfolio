@@ -1,0 +1,17 @@
+{
+  "technique": "T1020",
+  "name": "Automated Exfiltration",
+  "tactic": ["exfiltration"],
+  "datasources": [
+    "Process monitoring (archive/compression tools)",
+    "Network traffic content & volume",
+    "Cloud app activity logs"
+  ],
+  "detections": [
+    {"file": "../detections/exfil-abnormal-volume.kql", "platform": "Microsoft Sentinel"}
+  ],
+  "response_playbooks": [
+    "../playbooks/alert-hr-legal.jsonc"
+  ],
+  "coverage": { "visibility": "Medium", "detection": "Medium", "response": "Semi-automated" }
+}
