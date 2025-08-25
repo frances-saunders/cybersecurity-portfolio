@@ -20,7 +20,6 @@ labs/security-roadmap/
 ├── leadership-summary.md                 # Plain-language executive summary
 ├── metrics-framework.md                  # KPI/KRI definitions & alignment
 ├── executive-presentation.pdf            # Sanitized executive-ready slide deck
-├── case-study.md                         # Full write-up of problem, actions, and impact
 └── README.md                             # Lab documentation
 ```
 
