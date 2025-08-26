@@ -1,0 +1,11 @@
+Technique,Description,AI Detector Coverage,PQC Impact,Notes,Primary Data Sources
+SQL Injection,Malicious SQL in query params (e.g., 'union select'),Covered,Not Applicable,Detected via token and path entropy features,HTTP access logs
+Directory Traversal,Path attempts using ../ to escape webroot,Covered,Not Applicable,Flagged due to suspicious tokens and path length,HTTP access logs
+Credential Stuffing / Brute Force,High-rate login attempts with failures,Partial,Not Applicable,IsolationForest highlights spikes; add rate-based rule for stronger coverage,Auth logs / HTTP logs
+Large Data Exfiltration,Massive downloads or unusual transfer sizes,Covered,Not Applicable,Detected by bytes transferred and z-score spikes,HTTP and app logs
+RCE Payloads (xp_cmdshell),Indicators of OS command execution in params,Covered,Not Applicable,Token-based features capture known payload patterns,HTTP access logs
+Recon / Scanning,Suspicious user-agents and 401 bursts,Partial,Not Applicable,Add UA reputation + IP heuristics to improve,HTTP access logs
+Admin Endpoint Abuse,Unauthorized access to /admin endpoints,Covered,Not Applicable,401/403 patterns + method/path features,HTTP access logs
+TLS Downgrade / MITM,Weak or downgraded ciphers in transit,Not Covered,Mitigated by PQC (Hybrid KEX),Handled by transport layer; demonstrate PQC handshake,PQC demo telemetry
+Key Exchange Compromise,Intercepted classical RSA/ECC exchange,Not Covered,Mitigated by PQC (Hybrid KEX),Kyber KEM prevents future decryption (“harvest-now, decrypt-later”),PQC demo telemetry
+Insider Exfil via App API,Low-and-slow API pulls with valid auth,Partial,Not Applicable,Model sees anomalies; add user baselining & UEBA for stronger coverage,App/API logs
