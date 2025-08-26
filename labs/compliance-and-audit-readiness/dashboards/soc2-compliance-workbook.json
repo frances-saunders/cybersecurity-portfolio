@@ -1,0 +1,50 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          { "id": "timeRange", "type": 4, "name": "Time range", "value": { "durationMs": 2592000000 } }
+        ]
+      },
+      "name": "parameters"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "PolicyStates | where TimeGenerated between (ago(30d) .. now()) | where PolicySetDefinitionName has 'SOC' or PolicyAssignmentName has 'SOC' | summarize Compliant=countif(ComplianceState=='Compliant'), NonCompliant=countif(ComplianceState=='NonCompliant') | extend CompliancePct = 100.0 * Compliant / (Compliant + NonCompliant)",
+        "title": "SOC 2 Overall Compliance (%)",
+        "visualization": "tiles",
+        "tileSettings": {
+          "showTitle": true,
+          "titleContent": { "columnMatch": "CompliancePct", "formatter": 12, "formatOptions": { "precision": 1, "label": "SOC 2 Compliance %" } }
+        }
+      },
+      "name": "soc2_overall"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "PolicyStates | where TimeGenerated between (ago(30d) .. now()) | where PolicySetDefinitionName has 'SOC' or PolicyAssignmentName has 'SOC' | summarize NonCompliant=countif(ComplianceState=='NonCompliant') by PolicyAssignmentName | top 15 by NonCompliant desc",
+        "title": "SOC 2: Assignments with Highest Drift",
+        "visualization": "barchart"
+      },
+      "name": "soc2_drift"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "PolicyStates | where TimeGenerated between (ago(7d) .. now()) | where PolicySetDefinitionName has 'SOC' or PolicyAssignmentName has 'SOC' | project TimeGenerated, ComplianceState, PolicyDefinitionName, PolicyAssignmentName, ResourceId | top 200 by TimeGenerated desc",
+        "title": "Recent SOC 2 Findings (7 days)",
+        "visualization": "table"
+      },
+      "name": "soc2_recent"
+    }
+  ],
+  "fallbackResourceIds": [ "Azure Monitor" ]
+}
