@@ -1,0 +1,50 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          { "id": "timeRange", "type": 4, "name": "Time range", "value": { "durationMs": 2592000000 } }
+        ]
+      },
+      "name": "parameters"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "PolicyStates | where TimeGenerated between (ago(30d) .. now()) | where PolicySetDefinitionName has 'CIS' or PolicyAssignmentName has 'CIS' | summarize Compliant=countif(ComplianceState=='Compliant'), NonCompliant=countif(ComplianceState=='NonCompliant') | extend CompliancePct = 100.0 * Compliant / (Compliant + NonCompliant)",
+        "title": "CIS Overall Compliance (%)",
+        "visualization": "tiles",
+        "tileSettings": {
+          "showTitle": true,
+          "titleContent": { "columnMatch": "CompliancePct", "formatter": 12, "formatOptions": { "precision": 1, "label": "CIS Compliance %" } }
+        }
+      },
+      "name": "cis_overall"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "PolicyStates | where TimeGenerated between (ago(30d) .. now()) | where PolicySetDefinitionName has 'CIS' or PolicyAssignmentName has 'CIS' | summarize NonCompliant=countif(ComplianceState=='NonCompliant') by PolicyDefinitionName | top 25 by NonCompliant desc",
+        "title": "Top CIS Violations",
+        "visualization": "barchart"
+      },
+      "name": "cis_top_violations"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "PolicyStates | where TimeGenerated between (ago(14d) .. now()) | where PolicySetDefinitionName has 'CIS' or PolicyAssignmentName has 'CIS' | summarize NonCompliant=countif(ComplianceState=='NonCompliant') by bin(TimeGenerated, 1d) | render timechart",
+        "title": "CIS Non-Compliance Trend (14 days)",
+        "visualization": "timechart"
+      },
+      "name": "cis_trend"
+    }
+  ],
+  "fallbackResourceIds": [ "Azure Monitor" ]
+}
