@@ -29,6 +29,9 @@ labs/pqc-and-ai-security/
 ├── notebooks/
 │   └── visualization.ipyn
 │
+├── github-workflows/
+│   └── pqc-ai-lab.yml
+│
 ├── scripts/
 │   ├── ingest_logs.py
 │   └── scheduler.yaml
