@@ -15,18 +15,36 @@ The goal is to highlight how **quantum-resistant cryptography** and **AI-powered
 labs/pqc-and-ai-security/
 │
 ├── pqc-demo/
-│   ├── pqc_key_exchange.py              # Lattice-based KEM demo (Kyber)
-│   └── README.md                        # Explanation of PQC demo
+│   ├── pqc_key_exchange.py
+│   └── README.md
 │
 ├── ai-anomaly-detector/
-│   ├── anomaly_detector.py              # Isolation Forest & Autoencoder
-│   └── training_notebook.ipynb          # Jupyter Notebook workflow
+│   ├── anomaly_detector.py
+│   └── training_notebook.ipynb
 │
 ├── data/
 │   ├── normal_traffic.log
 │   └── anomalous_traffic.log
 │
-└── README.md
+├── notebooks/
+│   └── visualization.ipyn
+│
+├── scripts/
+│   ├── ingest_logs.py
+│   └── scheduler.yaml
+│
+├── vault/
+│   ├── keyvault_setup.sh
+│   └── vault_setup.ps1
+│
+├── terraform/
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   └── terraform.tfvars
+│
+└── attack-coverage-matrix.csv
+
 ````
 
 ---
