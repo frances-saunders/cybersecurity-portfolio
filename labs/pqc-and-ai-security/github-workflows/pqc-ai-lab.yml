@@ -1,0 +1,72 @@
+name: pqc-ai-lab
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * *"   # daily at 02:00 UTC
+  push:
+    paths:
+      - "labs/pqc-and-ai-security/**"
+
+concurrency:
+  group: pqc-ai-lab
+  cancel-in-progress: true
+
+permissions:
+  id-token: write     # required for OIDC to Azure
+  contents: read
+
+jobs:
+  run-and-ingest:
+    runs-on: ubuntu-latest
+    env:
+      # No plaintext secrets here. This is a non-secret URI reference.
+      AZURE_KEY_VAULT_URI: ${{ vars.AZURE_KEY_VAULT_URI }}
+      TARGET_BACKEND: cosmos   # or "sql" if you enable the (commented) SQL section + driver
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install system deps (Cosmos only)
+        run: |
+          sudo apt-get update -y
+          # If you decide to use Azure SQL ingestion, uncomment the lines below to install ODBC 18:
+          # curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+          # curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          # sudo apt-get update
+          # sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install azure-identity azure-keyvault-secrets azure-cosmos scikit-learn cryptography
+          # If using Azure SQL ingestion: pip install pyodbc
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}         # App registration (no password needed; uses OIDC)
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Run anomaly detector
+        working-directory: labs/pqc-and-ai-security
+        run: |
+          python ai-anomaly-detector/anomaly_detector.py data/normal_traffic.log data/anomalous_traffic.log
+
+      - name: Ingest raw candidate logs to Cosmos
+        working-directory: labs/pqc-and-ai-security
+        run: |
+          python scripts/ingest_logs.py data/anomalous_traffic.log
+
+      - name: Upload anomaly results
+        uses: actions/upload-artifact@v4
+        with:
+          name: anomaly-results
+          path: labs/pqc-and-ai-security/anomaly_results.csv
