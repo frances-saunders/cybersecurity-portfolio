@@ -1,0 +1,71 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "timeRange",
+            "type": 4,
+            "name": "Time range",
+            "value": { "durationMs": 2592000000 }
+          }
+        ]
+      },
+      "name": "parameters"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "PolicyStates | where TimeGenerated between (ago(30d) .. now()) | where isnotempty(PolicySetDefinitionName) and PolicySetDefinitionName has 'NIST' or PolicyAssignmentName has 'NIST' | summarize Compliant=countif(ComplianceState == 'Compliant'), NonCompliant=countif(ComplianceState == 'NonCompliant') | extend CompliancePct = 100.0 * Compliant / (Compliant + NonCompliant)",
+        "size": 0,
+        "title": "NIST Overall Compliance (%)",
+        "visualization": "tiles",
+        "tileSettings": {
+          "showTitle": true,
+          "titleContent": { "columnMatch": "CompliancePct", "formatter": 12, "formatOptions": { "precision": 1, "label": "NIST Compliance %" } }
+        }
+      },
+      "name": "nist_overall"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "PolicyStates | where TimeGenerated between (ago(30d) .. now()) | where PolicySetDefinitionName has 'NIST' or PolicyAssignmentName has 'NIST' | extend Family = tostring(split(PolicyDefinitionAction, '/')[0]) | summarize Compliant=countif(ComplianceState=='Compliant'), NonCompliant=countif(ComplianceState=='NonCompliant') by PolicyDefinitionGroup, Family | extend CompliancePct = 100.0 * Compliant / (Compliant + NonCompliant) | top 30 by NonCompliant desc",
+        "size": 0,
+        "title": "NIST by Control Family (Top Non-Compliant)",
+        "visualization": "barchart"
+      },
+      "name": "nist_by_family"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "PolicyStates | where TimeGenerated between (ago(30d) .. now()) | where PolicySetDefinitionName has 'NIST' or PolicyAssignmentName has 'NIST' | summarize NonCompliant=countif(ComplianceState=='NonCompliant') by bin(TimeGenerated, 1d) | render timechart",
+        "size": 0,
+        "title": "NIST Non-Compliance Trend (30 days)",
+        "visualization": "timechart"
+      },
+      "name": "nist_trend"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "PolicyStates | where TimeGenerated between (ago(7d) .. now()) | where PolicySetDefinitionName has 'NIST' or PolicyAssignmentName has 'NIST' | project TimeGenerated, ComplianceState, PolicyDefinitionName, PolicyAssignmentName, ResourceId | top 200 by TimeGenerated desc",
+        "size": 0,
+        "title": "Recent NIST Findings (7 days)",
+        "visualization": "table"
+      },
+      "name": "nist_recent"
+    }
+  ],
+  "fallbackResourceIds": [
+    "Azure Monitor"
+  ]
+}
