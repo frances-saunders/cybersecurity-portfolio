@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pqc-ai-lab-scheduler
+  labels:
+    app: pqc-ai-lab
+spec:
+  schedule: "0 2 * * *"   # daily at 02:00
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: pqc-ai-lab
+          annotations:
+            # If using Azure Workload Identity, set your client-id here:
+            # azure.workload.identity/client-id: "<WORKLOAD_IDENTITY_CLIENT_ID>"
+        spec:
+          serviceAccountName: pqc-ai-lab-sa   # bind to cloud identity (no secrets in YAML)
+          restartPolicy: Never
+          containers:
+            - name: anomaly-and-ingest
+              image: python:3.11-slim
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: AZURE_KEY_VAULT_URI
+                  value: "https://<your-keyvault-name>.vault.azure.net/"
+                - name: TARGET_BACKEND
+                  value: "cosmos"  # or "sql"
+              command: ["/bin/sh","-c"]
+              args:
+                - |
+                  pip install --no-cache-dir azure-identity azure-keyvault-secrets azure-cosmos scikit-learn pyodbc cryptography;
+                  python ai-anomaly-detector/anomaly_detector.py data/normal_traffic.log data/anomalous_traffic.log;
+                  python scripts/ingest_logs.py anomaly_results.csv
+          # Mount your repo as a volume if running in-cluster with a ConfigMap/CSI, or bake into a container image.
