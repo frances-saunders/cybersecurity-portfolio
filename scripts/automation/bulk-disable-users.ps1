@@ -1,38 +1,46 @@
 <#
 .SYNOPSIS
-  Bulk disable Azure AD users by UPN or ObjectId with rollback capability.
+    Disables Azure AD accounts in bulk (incident response).
 
-.PARAMETER Input
-  CSV with header 'user' (UPN or ObjectId). Example:
-  user
-  user1@contoso.com
-
-.PARAMETER RollbackFile
-  File storing successfully disabled users for potential rollback.
+.DESCRIPTION
+    - Accepts CSV with a 'UserPrincipalName' column OR newline list
+    - Logs results to CSV
+    - Supports WhatIf and error handling
+    - Optionally revokes sessions
 
 .EXAMPLE
-  ./bulk-disable-users.ps1 -Input compromised_users.csv -RollbackFile disabled.log
+    .\bulk-disable-users.ps1 -InputFile compromised.csv -RevokeTokens
 #>
+[CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
 param(
-  [Parameter(Mandatory=$true)] [string]$Input,
-  [string]$RollbackFile = "disabled-users-$(Get-Date -Format yyyyMMddHHmmss).log",
-  [switch]$WhatIf
+    [Parameter(Mandatory)] [string]$InputFile,
+    [switch]$RevokeTokens,
+    [string]$OutFile = "bulk-disable-results.csv"
 )
 
-Import-Module AzureAD -ErrorAction Stop
-Connect-AzureAD -ErrorAction Stop | Out-Null
-
-$users = Import-Csv $Input
-foreach ($u in $users) {
-  $id = $u.user.Trim()
-  try {
-    $account = Get-AzureADUser -ObjectId $id -ErrorAction Stop
-    if ($WhatIf) { Write-Host "[WHATIF] Would disable $($account.UserPrincipalName)"; continue }
-    Set-AzureADUser -ObjectId $account.ObjectId -AccountEnabled $false -ErrorAction Stop
-    "$($account.ObjectId),$($account.UserPrincipalName)" | Out-File -Append -FilePath $RollbackFile
-    Write-Host "Disabled: $($account.UserPrincipalName)"
-  } catch {
-    Write-Warning "Failed to disable: $id | $_"
-  }
+function Get-UserList {
+    param([string]$Path)
+    if ($Path.EndsWith(".csv")) {
+        (Import-Csv $Path).UserPrincipalName
+    } else {
+        Get-Content $Path
+    }
 }
-Write-Host "Done. Rollback list: $RollbackFile"
+
+$results = @()
+$users = Get-UserList -Path $InputFile | Where-Object { $_ -and $_.Trim() -ne "" } | Select-Object -Unique
+
+foreach ($upn in $users) {
+    try {
+        if ($PSCmdlet.ShouldProcess($upn,"Disable account")) {
+            Update-MgUser -UserId $upn -AccountEnabled:$false
+            if ($RevokeTokens) { Revoke-MgUserSignInSession -UserId $upn | Out-Null }
+            $results += [pscustomobject]@{User=$upn; Disabled=$true; Revoked=$RevokeTokens; Error=""}
+        }
+    } catch {
+        $results += [pscustomobject]@{User=$upn; Disabled=$false; Revoked=$false; Error=$_.Exception.Message}
+    }
+}
+
+$results | Export-Csv -NoTypeInformation -Path $OutFile
+Write-Output "Completed. Results -> $OutFile"
