@@ -6,31 +6,31 @@ This folder contains **reusable, production-minded tooling** that supports the p
 
 ## Subdirectory purposes
 
-* **automation/**
+* **automation/**  
   Operational utilities for day-to-day security engineering: bulk tasks, secret rotation, tagging/guardrails, packaging evidence, and similar repeatable workflows.
 
-* **compliance/**
+* **compliance/**  
   Evidence collection, normalization, and reporting for frameworks (NIST, CIS, ISO, SOC 2). Includes helpers for POA\&M generation, secure score collection, and config validation to support audit readiness.
 
-* **detection-response/**
+* **detection-response/**  
   Detection engineering and incident response helpers: rule linting/promotion, threat-intel processing, containment actions, enrichment, and synthetic smoke tests for SIEM/SOAR pipelines.
 
-* **dfir/**
+* **dfir/**  
   Digital forensics and incident response triage. Host live-response collectors, timeline exports, and integrity manifests aimed at rapid, low-impact evidence gathering.
 
-* **hardening/**
+* **hardening/**  
   Baseline and benchmark enforcement across OS, containers, Kubernetes, and IAM. Includes guardrails and checks that can gate deployments in CI.
 
-* **integration/**
+* **integration/**  
   Cross-platform glue code that connects services (e.g., cloud → SIEM, Splunk ↔ Sentinel, S3 → ADLS). Emphasizes secure identity (OIDC) and secret-less automation.
 
-* **ml-security/**
+* **ml-security/**  
   Applied analytics for security data (e.g., anomaly detection, drift monitoring). Designed to run offline on exported datasets or inline in batch jobs and push results back to SIEM.
 
-* **observability/**
+* **observability/**  
   Health checks and SLOs for the security data plane: connector status, ingestion lag, workbook export/versioning. Intended for continuous monitoring and CI/cron.
 
-* **pqc/**
+* **pqc/**  
   Post-quantum cryptography demos and planning utilities (e.g., rotation scheduling, readiness assessment) to support future-proofing crypto posture.
 
 ---
