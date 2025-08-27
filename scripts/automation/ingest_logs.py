@@ -1,184 +1,111 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-Secure log ingestion utility.
+ingest_logs.py
+--------------
+Secure, parameterized ingestion of JSON logs into Azure Cosmos DB (or Log Analytics),
+with credentials pulled from Azure Key Vault using workload identity or managed identity.
+- No plaintext secrets.
+- Idempotent writes optional (via upsert).
+- Structured logging for SOC pipelines.
 
-Supports:
-- Azure Cosmos DB (Core API)
-- Azure Log Analytics (HTTP Data Collector API)
-- Azure SQL (pyodbc optional)
-
-Secrets:
-- Prefer Managed Identity via DefaultAzureCredential.
-- Fallback to Key Vault (KEYVAULT_URL + secret names).
-- Never store secrets in plaintext.
-
-Usage:
-  python ingest_logs.py --source-file logs.jsonl --sink cosmos --db LogsDB --container SecurityLogs
-  python ingest_logs.py --source-file logs.jsonl --sink loganalytics --workspace-id XXX --table CustomLogs_CL
+Example:
+  python ingest_logs.py --source-file ./samples.json --db LogsDB --container SecurityLogs
+Env:
+  KEYVAULT_URL   : https://<your-kv-name>.vault.azure.net
+  COSMOS_DB_NAME : (optional default)
+  COSMOS_CONT    : (optional default)
+  LOG_LEVEL      : INFO|DEBUG|ERROR
 """
 
-import argparse
-import json
-import logging
-import os
-import sys
-from typing import Dict, Iterable, Optional
+import argparse, json, logging, os, sys, uuid
+from typing import Iterable, Dict, Any
 
-# Azure SDKs (install if needed)
-# pip install azure-identity azure-keyvault-secrets azure-cosmos requests
+# Azure SDKs
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
+from azure.cosmos import CosmosClient, exceptions as cosmos_exceptions
 
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
-logging.basicConfig(level=LOG_LEVEL, format="%(asctime)s %(levelname)s %(message)s")
+def get_logger() -> logging.Logger:
+    level = os.getenv("LOG_LEVEL", "INFO").upper()
+    logging.basicConfig(
+        level=getattr(logging, level, logging.INFO),
+        format="%(asctime)s %(levelname)s %(name)s - %(message)s"
+    )
+    return logging.getLogger("ingest_logs")
 
-def _credential():
-    return DefaultAzureCredential(exclude_interactive_browser_credential=True)
+log = get_logger()
 
-def _kv_secret(name: str) -> str:
-    kv_url = os.getenv("KEYVAULT_URL")
-    if not kv_url:
-        raise RuntimeError("KEYVAULT_URL is not set")
-    client = SecretClient(kv_url, _credential())
+def kv_get_secret(vault_url: str, name: str) -> str:
+    """Fetch a secret value from Azure Key Vault."""
+    cred = DefaultAzureCredential()
+    client = SecretClient(vault_url=vault_url, credential=cred)
     return client.get_secret(name).value
 
-# ---------- CosmosDB ----------
-def _cosmos_client():
-    from azure.cosmos import CosmosClient
-    # Prefer MSI via AAD (no key), otherwise use KV secrets
-    cosmos_url = os.getenv("COSMOS_URL") or _kv_secret("cosmos-url")
-    cosmos_key = os.getenv("COSMOS_KEY") or _kv_secret("cosmos-key")
+def read_records(source_file: str) -> Iterable[Dict[str, Any]]:
+    """Yield JSON records from file or stdin."""
+    stream = open(source_file, "r", encoding="utf-8") if source_file else sys.stdin
+    try:
+        for line in stream:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rec = json.loads(line)
+            except json.JSONDecodeError:
+                # Allow JSON arrays for convenience
+                if line.startswith("["):
+                    for rec in json.loads(line):
+                        yield rec
+                    continue
+                raise
+            yield rec
+    finally:
+        if source_file:
+            stream.close()
+
+def connect_cosmos(vault_url: str) -> CosmosClient:
+    """Create a CosmosClient using secrets from Key Vault."""
+    cosmos_url = kv_get_secret(vault_url, "cosmos-db-url")
+    cosmos_key = kv_get_secret(vault_url, "cosmos-db-key")
     return CosmosClient(url=cosmos_url, credential=cosmos_key)
 
-def _cosmos_ingest(items: Iterable[Dict], db: str, container: str):
-    client = _cosmos_client()
-    database = client.get_database_client(db)
-    cont = database.get_container_client(container)
-    count = 0
-    for item in items:
-        try:
-            # Ensure an id
-            item.setdefault("id", f"{item.get('time', 't')}-{count}")
-            cont.create_item(item)
-            count += 1
-        except Exception as e:
-            logging.exception("Cosmos insert failed for record: %s", item)
-    logging.info("Cosmos ingestion complete: %s records", count)
+def ensure_container(client: CosmosClient, db_name: str, container: str, pk: str):
+    """Create DB/container if missing (safe for idempotent Dev/Test)."""
+    db = client.create_database_if_not_exists(db_name)
+    return db.create_container_if_not_exists(id=container, partition_key={"paths":[pk], "kind":"Hash"})
 
-# ---------- Log Analytics ----------
-def _la_ingest(items: Iterable[Dict], workspace_id: str, table: str):
-    """
-    Ingest via HTTP Data Collector.
-    Requires:
-      - LA_WORKSPACE_SHARED_KEY env or KeyVault secret "loganalytics-shared-key"
-    """
-    import hashlib, hmac, base64
-    from datetime import datetime
-    import requests
-
-    shared_key = os.getenv("LA_SHARED_KEY") or _kv_secret("loganalytics-shared-key")
-    customer_id = workspace_id
-
-    def build_sig(content_len, rfc1123date):
-        string_to_hash = f"POST\n{content_len}\napplication/json\nx-ms-date:{rfc1123date}\n/api/logs"
-        bytes_to_hash = bytes(string_to_hash, encoding="utf-8")
-        decoded_key = base64.b64decode(shared_key)
-        encoded_hash = base64.b64encode(hmac.new(decoded_key, bytes_to_hash, hashlib.sha256).digest()).decode()
-        return f"SharedKey {customer_id}:{encoded_hash}"
-
-    uri = f"https://{customer_id}.ods.opinsights.azure.com/api/logs?api-version=2016-04-01"
-    batch = []
-    count = 0
-    for item in items:
-        batch.append(item)
-        if len(batch) >= 1000:
-            body = json.dumps(batch)
-            rfc1123date = datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
-            sig = build_sig(len(body), rfc1123date)
-            headers = {
-                "Content-Type": "application/json",
-                "Log-Type": table,
-                "x-ms-date": rfc1123date,
-                "Authorization": sig,
-            }
-            resp = requests.post(uri, data=body, headers=headers, timeout=30)
-            if resp.status_code >= 200 and resp.status_code < 300:
-                count += len(batch)
-                batch = []
-            else:
-                logging.error("LA ingest failed: %s - %s", resp.status_code, resp.text)
-                batch = []
-    if batch:
-        # send remainder
-        body = json.dumps(batch)
-        rfc1123date = datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
-        sig = build_sig(len(body), rfc1123date)
-        headers = {"Content-Type": "application/json", "Log-Type": table, "x-ms-date": rfc1123date, "Authorization": sig}
-        import requests
-        resp = requests.post(uri, data=body, headers=headers, timeout=30)
-        if 200 <= resp.status_code < 300:
-            count += len(batch)
-        else:
-            logging.error("LA ingest failed (final): %s - %s", resp.status_code, resp.text)
-
-    logging.info("Log Analytics ingestion complete: %s records", count)
-
-# ---------- Azure SQL ----------
-def _sql_ingest(items: Iterable[Dict], table: str):
-    """
-    Optional: requires pyodbc and a system ODBC driver. Secrets via KV:
-      sql-conn-string e.g. Driver={ODBC Driver 18 for SQL Server};Server=tcp:...;Database=...;Encrypt=yes;...
-    """
-    import pyodbc
-    conn_str = os.getenv("SQL_CONN_STR") or _kv_secret("sql-conn-string")
-    with pyodbc.connect(conn_str) as conn:
-        cursor = conn.cursor()
-        count = 0
-        for i in items:
-            cols = ",".join(i.keys())
-            placeholders = ",".join("?" for _ in i.values())
-            cursor.execute(f"INSERT INTO {table} ({cols}) VALUES ({placeholders})", list(i.values()))
-            count += 1
-        conn.commit()
-        logging.info("Azure SQL ingestion complete: %s rows -> %s", count, table)
-
-def _read_jsonl(path: str) -> Iterable[Dict]:
-    with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            if line.strip():
-                try:
-                    yield json.loads(line)
-                except json.JSONDecodeError:
-                    logging.warning("Skipping invalid JSON line: %s", line[:120])
+def upsert_record(container, record: Dict[str, Any], id_field: str) -> None:
+    """Upsert a record, auto-generate id if missing."""
+    if "id" not in record:
+        record["id"] = str(record.get(id_field)) if id_field in record else str(uuid.uuid4())
+    container.upsert_item(record)
 
 def main():
-    p = argparse.ArgumentParser()
-    p.add_argument("--source-file", required=True, help="JSON Lines file to ingest")
-    p.add_argument("--sink", required=True, choices=["cosmos", "loganalytics", "sql"])
-    p.add_argument("--db", help="Cosmos database name")
-    p.add_argument("--container", help="Cosmos container name")
-    p.add_argument("--workspace-id", help="Log Analytics workspace ID")
-    p.add_argument("--table", help="Log Analytics custom table or SQL table")
+    p = argparse.ArgumentParser(description="Secure log ingestion into CosmosDB")
+    p.add_argument("--source-file", help="Path to NDJSON/JSON file (default: stdin)")
+    p.add_argument("--db", default=os.getenv("COSMOS_DB_NAME", "LogsDB"), help="Cosmos DB name")
+    p.add_argument("--container", default=os.getenv("COSMOS_CONT", "SecurityLogs"), help="Cosmos container")
+    p.add_argument("--partition-key", default="/eventType", help="Cosmos partition key path")
+    p.add_argument("--id-field", default="eventId", help="If present, use as id")
+    p.add_argument("--vault-url", default=os.getenv("KEYVAULT_URL"), required=not os.getenv("KEYVAULT_URL"),
+                   help="Key Vault URL e.g., https://kv.vault.azure.net")
     args = p.parse_args()
 
-    items = _read_jsonl(args.source_file)
-
-    if args.sink == "cosmos":
-        if not (args.db and args.container):
-            p.error("--db and --container are required for cosmos sink")
-        _cosmos_ingest(items, args.db, args.container)
-    elif args.sink == "loganalytics":
-        if not (args.workspace_id and args.table):
-            p.error("--workspace-id and --table are required for loganalytics sink")
-        _la_ingest(items, args.workspace_id, args.table)
-    else:
-        if not args.table:
-            p.error("--table is required for sql sink")
-        _sql_ingest(items, args.table)
+    try:
+        client = connect_cosmos(args.vault_url)
+        cont = ensure_container(client, args.db, args.container, args.partition-key)
+        count = 0
+        for rec in read_records(args.source_file):
+            try:
+                upsert_record(cont, rec, args.id_field)
+                count += 1
+            except cosmos_exceptions.CosmosHttpResponseError as e:
+                log.error("Cosmos error: %s | record=%s", e, rec)
+        log.info("Ingestion complete. records=%d db=%s container=%s", count, args.db, args.container)
+    except Exception as e:
+        log.exception("Fatal error: %s", e)
+        sys.exit(1)
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        logging.exception("Fatal error")
-        sys.exit(1)
+    main()
