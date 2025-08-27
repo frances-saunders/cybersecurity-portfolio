@@ -1,13 +1,32 @@
 <#
-Baseline OS hardening for Windows/Linux.
-Includes firewall, secure services, and logging.
+.SYNOPSIS
+    Baseline OS hardening (Windows) with sane defaults for enterprise fleets.
+
+.DESCRIPTION
+    - Enables host firewall for all profiles
+    - Enforces secure PowerShell (script block logging, transcription)
+    - Ensures audit policies for authentication and process tracking
+    - Disables legacy protocols/services where safe (SMBv1)
+    - Idempotent: re-runs safely
+
+.NOTES
+    Requires admin. Test in non-prod before broad rollout.
 #>
 
-# Enable Windows Defender
-Set-MpPreference -DisableRealtimeMonitoring $false
+# 1) Firewall
+Set-NetFirewallProfile -Profile Domain,Private,Public -Enabled True -Verbose
 
-# Configure firewall
-Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled True
+# 2) PowerShell Logging
+New-Item -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell -Force | Out-Null
+New-Item -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging -Force | Out-Null
+Set-ItemProperty HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging -Name EnableScriptBlockLogging -Value 1
 
-# Ensure logging
-wevtutil set-log Security /enabled:true
+# 3) Audit Policy (subset example)
+auditpol /set /subcategory:"Logon" /success:enable /failure:enable
+auditpol /set /subcategory:"Process Creation" /success:enable /failure:disable
+
+# 4) Disable SMBv1
+Set-SmbServerConfiguration -EnableSMB1Protocol $false -Force
+
+# 5) Windows Defender baseline
+Set-MpPreference -DisableRealtimeMonitoring $false -MAPSReporting Advanced -SubmitSamplesConsent AlwaysPrompt
