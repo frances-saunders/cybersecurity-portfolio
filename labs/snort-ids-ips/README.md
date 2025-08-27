@@ -15,12 +15,36 @@ The lab is structured to showcase:
 
 ## Lab Structure
 ```
-rules/ # Custom Snort rules
-simulations/ # Attack simulation PCAPs
-integrations/ # Splunk/Sentinel & TI integration
-reports/ # Tuning notes, coverage matrix, IR summary
-scripts/ # Automation for log forwarding & intel updates
-case-study.md # Executive-level project write-up
+labs/snort-ids-ips/
+│
+├── rules/                            # Custom and tuned Snort rules
+│   ├── brute-force.rules
+│   ├── sql-injection.rules
+│   ├── suspicious-dns.rules
+│   └── malware-signatures.rules
+│
+├── simulations/                      # Attack simulations & traffic captures
+│   ├── nmap-portscan.pcap
+│   ├── sql-injection-attack.pcap
+│   ├── brute-force-ssh.pcap
+│   └── metasploit-malware-traffic.pcap
+│
+├── integrations/                     # SIEM/Threat Intel integration examples
+│   ├── splunk-snort-alerts.conf
+│   ├── sentinel-connector.json
+│   └── threat-intel-feed-integration.md
+│
+├── reports/                          # Outputs and analysis
+│   ├── tuning-analysis.md
+│   ├── detection-coverage-matrix.csv
+│   └── incident-response-summary.md
+│
+├── scripts/                          # Automation & enrichment scripts
+│   ├── log-forwarder.py              # Securely sends Snort logs to Splunk/Sentinel
+│   └── intel-updater.sh              # Pulls threat intel feeds and updates rules
+│
+└── README.md                         # Lab overview
+
 ```
 ---
 
