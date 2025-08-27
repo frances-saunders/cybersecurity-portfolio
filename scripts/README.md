@@ -37,19 +37,18 @@ This folder contains **reusable, production-minded tooling** that supports the p
 
 ## How to use these scripts
 
-* **Dry-run first**
+* **Dry-run first**  
   Most scripts support `--dry-run` (bash/python) or `-WhatIf` (PowerShell). Use it before making changes.
 
-* **Identity & secrets**
-
+* **Identity & secrets**  
   * Prefer **OIDC/workload identity** for CI.
   * For cloud credentials, use **Azure Key Vault** or **HashiCorp Vault**; never commit secrets.
   * Environment variables are accepted for short-lived tokens (e.g., `AZ_TOKEN`, `WORKSPACE_ID`, `SHARED_KEY`, `SPLUNK_TOKEN`).
 
-* **Logging & output**
+* **Logging & output**  
   Scripts emit **structured output** (JSON/CSV) suitable for pipelines. Non-zero exit codes indicate policy violations or errors to **gate** builds.
 
-* **Cross-platform**
+* **Cross-platform**  
   PowerShell scripts target Windows/Cloud; bash targets Linux/macOS; Python targets 3.9+ with clear dependency headers. Install requirements per script (`pip install …`).
 
 ---
