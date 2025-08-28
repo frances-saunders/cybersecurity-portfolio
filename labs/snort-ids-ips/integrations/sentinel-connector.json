@@ -1,0 +1,68 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": { "type": "string" },
+    "workspaceResourceId": { "type": "string" },
+    "dceName": { "type": "string", "defaultValue": "dce-snort" },
+    "dcrName": { "type": "string", "defaultValue": "dcr-snort" },
+    "customTableName": { "type": "string", "defaultValue": "Snort_CL" }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.Insights/dataCollectionEndpoints",
+      "apiVersion": "2022-06-01",
+      "name": "[parameters('dceName')]",
+      "location": "[parameters('location')]",
+      "properties": { "networkAcls": { "publicNetworkAccess": "Enabled" } }
+    },
+    {
+      "type": "Microsoft.Insights/dataCollectionRules",
+      "apiVersion": "2022-06-01",
+      "name": "[parameters('dcrName')]",
+      "location": "[parameters('location')]",
+      "kind": "Linux",
+      "properties": {
+        "dataCollectionEndpointId": "[resourceId('Microsoft.Insights/dataCollectionEndpoints', parameters('dceName'))]",
+        "streamDeclarations": {
+          "Custom-Logs": { "columns": [ { "name": "TimeGenerated", "type": "datetime" }, { "name": "RawData", "type": "string" } ] }
+        },
+        "dataFlows": [
+          {
+            "streams": [ "Custom-Logs" ],
+            "destinations": [ "logAnalytics" ],
+            "outputStream": "Custom-Logs",
+            "transformKql": "source | extend Msg=parse_json(RawData) | project-away RawData | project TimeGenerated=Msg.time, Message=Msg.msg, Sid=tostring(Msg.sid), Rev=tostring(Msg.rev), Sig=tostring(Msg.signature), Proto=tostring(Msg.proto), Src=tostring(Msg.src), Dst=tostring(Msg.dst), Sport=tostring(Msg.sport), Dport=tostring(Msg.dport), Severity=tostring(Msg.severity)"
+          }
+        ],
+        "destinations": {
+          "logAnalytics": [
+            {
+              "workspaceResourceId": "[parameters('workspaceResourceId')]",
+              "name": "logAnalytics",
+              "tableName": "[parameters('customTableName')]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.OperationsManagement/solutions",
+      "apiVersion": "2015-11-01-preview",
+      "name": "[concat('SecurityInsights(', split(parameters('workspaceResourceId'), '/')[8] ,')')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [],
+      "properties": {
+        "workspaceResourceId": "[parameters('workspaceResourceId')]",
+        "containedResources": []
+      }
+    }
+  ],
+  "outputs": {
+    "dceIngestionUri": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Insights/dataCollectionEndpoints', parameters('dceName'))).properties.logsIngestion.endpoint]"
+    }
+  }
+}
