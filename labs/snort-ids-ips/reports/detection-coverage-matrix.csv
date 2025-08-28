@@ -1,0 +1,10 @@
+Technique,Tactic,Rule File,Rule Name / Description,Quality,Notes
+T1110 - Brute Force,Credential Access,brute-force.rules,SSH excessive connection attempts,High,Threshold tuned; exceptions for CI/CD ranges
+T1110 - Brute Force,Credential Access,brute-force.rules,HTTP 401 storm on same resource,Medium,Correlate with web logs to confirm
+T1190 - Exploit Public-Facing App,Initial Access,sql-injection.rules,UNION SELECT obfuscation in URI,High,Anchored PCRE reduces FP
+T1190 - Exploit Public-Facing App,Initial Access,sql-injection.rules,SQLi in POST body with DB keywords,High,Requires established flow
+T1041 - Exfiltration Over C2 Channel,Exfiltration,malware-signatures.rules,Suspicious C2 path (gate.php),Medium,Use with UA flowbit
+T1071.001 - Web Protocol,Command and Control,malware-signatures.rules,Suspicious minimal User-Agent,Medium,Stage 1 indicator; chain with path
+T1048 - Exfiltration Over Alternative Protocol,Exfiltration,suspicious-dns.rules,Long subdomain exfiltration,Medium,Tune threshold by org
+TA0007 - Discovery,Discovery,simulations (scan),Nmap multi-port SYN scan (heuristic),High,Heuristic supports IPS block
+TA0011 - Command and Control,Command and Control,malware-signatures.rules,Dynamic DNS host usage,Medium,Watch allowlist collisions
