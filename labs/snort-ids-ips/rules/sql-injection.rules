@@ -1,0 +1,69 @@
+# ---------------------------------------------
+# SQL Injection Detection Rules
+# Author: Your Name
+# Purpose: Detect common and obfuscated SQLi payloads
+# Notes:
+#  - Use normalized HTTP buffers (http_uri, http_client_body)
+#  - Anchored content + PCRE to limit FPs
+# ---------------------------------------------
+
+# Basic tautology and union select patterns in URI
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (
+    msg:"WEB-ATTACK SQLi attempt in URI (tautology/union)";
+    flow:to_server,established;
+    http_uri;
+    content:"' OR '1'='1"; nocase; fast_pattern;
+    pcre:"/(\%27|\')\s*or\s*(\%271\%27|\'1\')\s*=\s*(\%271\%27|\'1\')/iU";
+    classtype:web-application-attack;
+    metadata:service http,attack_target WebApp,policy security-ips drop;
+    reference:cve,2023-XXXX;
+    reference:url,attack.mitre.org/techniques/T1190/;
+    sid:1000101; rev:6;
+)
+
+# UNION SELECT with comment bypass and mixed case
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (
+    msg:"WEB-ATTACK SQLi UNION SELECT in URI";
+    flow:to_server,established;
+    http_uri;
+    pcre:"/union(?:\/\*.*\*\/|\s+)+select\b/i";
+    classtype:web-application-attack;
+    metadata:service http,attack_target WebApp,policy balanced-ips drop;
+    sid:1000102; rev:5;
+)
+
+# SQLi in request body (POST), with common DB keywords and operators
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (
+    msg:"WEB-ATTACK SQLi indicators in POST body";
+    flow:to_server,established;
+    http_client_body;
+    content:"select"; nocase; within:200;
+    content:" from "; nocase; distance:0; within:100;
+    pcre:"/(\b(update|delete|insert|sleep|benchmark)\b).{0,80}(\bwhere\b|\bset\b)/i";
+    classtype:web-application-attack;
+    metadata:service http,attack_target WebApp,policy security-ips drop;
+    detection_filter:track by_src, count 3, seconds 60;
+    sid:1000103; rev:4;
+)
+
+# Time-based blind SQLi indicators (sleep, benchmark)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (
+    msg:"WEB-ATTACK SQLi time-based (sleep/benchmark) in URI/body";
+    flow:to_server,established;
+    http_raw_uri; content:"sleep("; nocase; fast_pattern; offset:0; depth:300;
+    http_client_body; content:"benchmark("; nocase; distance:0; within:300;
+    classtype:web-application-attack;
+    metadata:service http,attack_target WebApp,policy security-ips drop;
+    sid:1000104; rev:3;
+)
+
+# Comment obfuscation with stacked queries
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (
+    msg:"WEB-ATTACK SQLi stacked queries with comment obfuscation";
+    flow:to_server,established;
+    http_uri;
+    pcre:"/;\s*(--|#|\/\*)/U";
+    classtype:web-application-attack;
+    metadata:service http,attack_target WebApp,policy balanced-ips drop;
+    sid:1000105; rev:2;
+)
