@@ -1,0 +1,44 @@
+# ---------------------------------------------
+# Suspicious DNS Activity
+# Author: Your Name
+# Purpose: Detect DNS patterns associated with DGA, exfil, and shady TLDs
+# Notes:
+#  - Works best with DNS inspection enabled
+#  - Tune TLD list to your org risk appetite
+# ---------------------------------------------
+
+var SUSPICIOUS_TLDS ".zip|.top|.xyz|.best|.country|.gq|.ga|.cf|.ml|.tk"
+
+# Excessive DNS queries for NXDOMAIN (possible DGA)
+alert udp $HOME_NET any -> $EXTERNAL_NET 53 (
+    msg:"DNS possible DGA (excessive NXDOMAIN)";
+    flow:to_server;
+    content:"|00 01 00 00 00 00 00 00|"; offset:2; depth:8; # QDCOUNT=1, ANCOUNT=0, NSCOUNT=0, ARCOUNT=0 (request)
+    detection_filter:track by_src, count 40, seconds 60;
+    classtype:bad-unknown;
+    metadata:service dns,attack_target DNS,policy balanced-ips drop;
+    sid:1000201; rev:4;
+)
+
+# Very long FQDN labels (data exfil via DNS)
+alert udp $HOME_NET any -> $EXTERNAL_NET 53 (
+    msg:"DNS potential exfiltration via long subdomain";
+    flow:to_server;
+    byte_test:1,>,50,12; # label length > 50 (approx heuristic)
+    classtype:exfiltration;
+    metadata:service dns,attack_target DNS,policy security-ips drop;
+    reference:url,attack.mitre.org/techniques/T1048/;
+    sid:1000202; rev:3;
+)
+
+# Suspicious TLD lookups
+alert udp $HOME_NET any -> $EXTERNAL_NET 53 (
+    msg:"DNS suspicious TLD query";
+    flow:to_server;
+    pcre:"/([a-z0-9-]{3,}\.)+([a-z]{2,63})(\.)?$/Ri";
+    pcre:"/(${SUSPICIOUS_TLDS})$/Ri";
+    classtype:bad-unknown;
+    metadata:service dns,attack_target DNS,policy balanced-ips drop;
+    detection_filter:track by_src, count 10, seconds 120;
+    sid:1000203; rev:4;
+)
