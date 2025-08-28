@@ -1,0 +1,7 @@
+Technique,Tactic,Artifact,Method/Heuristic,Quality,Notes
+T1041 - Exfiltration Over C2 Channel,Exfiltration,ioc_extractor.py,Beacon periodicity + SNI/ALPN/DoH detection,High,Works w/o decryption
+T1071.001 - Web Protocol C2,Command and Control,protocol-deep-dive.md,ALPN h2 + rare SNI + small TLS records,High,Add JA3 if available
+T1048 - Exfiltration Over Alternative Protocol,Exfiltration,protocol-deep-dive.md,DoH discovery & size anomaly,Medium,Requires endpoint context
+T1557 - Adversary-in-the-Middle,Credential Access,arp_mitm_detector.py,Duplicate ARP + gateway MAC changes,High,Corroborate with infra logs
+T1016 - Discovery: Network Service Scanning,Discovery,tcp_latency_report.py,Handshake anomalies & SYN patterns,Medium,Not a detector alone
+T1105 - Ingress Tool Transfer,Command and Control,file_carver_http.py,HTTP object export + hash,High,Cleartext only
