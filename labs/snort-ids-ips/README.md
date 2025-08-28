@@ -24,10 +24,8 @@ labs/snort-ids-ips/
 │   └── malware-signatures.rules
 │
 ├── simulations/                      # Attack simulations & traffic captures
-│   ├── nmap-portscan.pcap
-│   ├── sql-injection-attack.pcap
-│   ├── brute-force-ssh.pcap
-│   └── metasploit-malware-traffic.pcap
+│   ├── README.md
+│   └── generate_pcaps.py
 │
 ├── integrations/                     # SIEM/Threat Intel integration examples
 │   ├── splunk-snort-alerts.conf
