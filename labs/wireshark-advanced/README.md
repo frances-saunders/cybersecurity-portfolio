@@ -28,7 +28,7 @@ labs/wireshark-advanced/
 │   ├── performance-security-monitoring.md  # Latency, ARP spoof, MITM detection
 │   └── attack-coverage-matrix.csv          # ATT&CK mapping of analytic coverage
 │
-└── scripts/
+├── scripts/
 │   ├── ioc_extractor.py                    # Extract SNI/DNS/HTTP URIs, ALPN, TLS ver, (best-effort) JA3
 │   ├── tcp_latency_report.py               # Handshake time, RTT medians, retrans/zero-window counts
 │   ├── arp_mitm_detector.py                # ARP conflict/gateway-MAC-change heuristics → JSON evidence
