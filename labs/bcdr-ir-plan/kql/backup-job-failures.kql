@@ -1,0 +1,40 @@
+// backup-job-failures.kql
+// Detects Azure Backup job failures across all Recovery Services Vaults.
+// Run in Log Analytics Workspace linked to Azure Monitor diagnostic settings.
+//
+// Required diagnostic settings: Recovery Services Vault → Log Analytics
+// Table: AddonAzureBackupJobs
+
+AddonAzureBackupJobs
+| where TimeGenerated > ago(24h)
+| where JobOperation in ("Backup", "Restore")
+| where JobStatus == "Failed"
+| extend VaultName = split(ResourceId, "/")[-1]
+| project
+    TimeGenerated,
+    VaultName,
+    JobOperation,
+    JobStatus,
+    JobFailureCode,
+    BackupItemFriendlyName,
+    BackupManagementType,
+    ResourceId
+| order by TimeGenerated desc
+
+// ── Alert threshold ───────────────────────────────────────────────────────
+// Create a Scheduled Analytics Rule with:
+//   Query frequency : 5 minutes
+//   Lookup window   : 15 minutes
+//   Alert threshold : results > 0
+//   Severity        : High (Tier 1 vault), Medium (Tier 2/3)
+
+// ── Variant: Backup jobs with no recent success (coverage gap detector) ──
+//
+// AddonAzureBackupJobs
+// | where TimeGenerated > ago(48h)
+// | where JobOperation == "Backup"
+// | summarize LastSuccess = maxif(TimeGenerated, JobStatus == "Completed")
+//             by BackupItemFriendlyName, BackupManagementType
+// | where isnull(LastSuccess) or LastSuccess < ago(25h)
+// | project BackupItemFriendlyName, BackupManagementType, LastSuccess
+// | order by LastSuccess asc
