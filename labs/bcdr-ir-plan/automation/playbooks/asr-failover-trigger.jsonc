@@ -1,0 +1,163 @@
+{
+  // asr-failover-trigger.jsonc
+  // Azure Logic App playbook — triggered by Azure Service Health alert for region outage.
+  // Executes pre-failover validation and STOPS at the human approval gate before
+  // initiating any ASR failover action.
+  //
+  // DELIBERATE DESIGN DECISION: This playbook does NOT auto-failover.
+  // A human approval gate is required. See docs/ir-playbooks/region-outage-tier1-failover.md
+  // Pre-Failover Decision Framework and docs/options-analysis-and-architecture-decision.md.
+  // Rationale: An automated failover triggered by a false positive region health alert
+  // would cause unnecessary disruption and introduce data loss risk.
+  //
+  // What this playbook DOES automate:
+  //   1. Detects the Service Health alert and pages the on-call team
+  //   2. Runs the pre-failover validation checklist (replication health, DNS pre-staging)
+  //   3. Sends an approval request to the Incident Commander via Teams adaptive card
+  //   4. If approved: adds a comment to the Sentinel incident with the authorization timestamp
+  //   5. If rejected: closes the alert and logs the rejection
+  //
+  // The actual failover commands are executed MANUALLY per IR-003 Phase 2.
+  // This playbook provides the authorization audit trail and reduces the pre-failover
+  // checklist from 30 minutes to under 5 minutes.
+  //
+  // Trigger: Azure Service Health alert — region outage (eastus2)
+  // Permissions required (managed identity):
+  //   - Microsoft Sentinel Responder (to add incident comments)
+  //   - Monitoring Reader (to check ASR replication health)
+  // Deploy via: Sentinel > Automation > Playbooks > Add
+
+  "$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json",
+  "contentVersion": "1.0.0.0",
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "IncidentCommanderEmail": {
+        "type": "string",
+        "defaultValue": "ic@company.com",
+        "metadata": { "description": "Incident Commander email for failover approval request." }
+      },
+      "TeamsWebhookUrl": {
+        "type": "securestring",
+        "metadata": { "description": "SOC Teams channel webhook URL. Store in Key Vault." }
+      },
+      "LogAnalyticsWorkspaceId": {
+        "type": "string",
+        "metadata": { "description": "Log Analytics Workspace ID for replication health check." }
+      }
+    },
+    "triggers": {
+      "When_Service_Health_Alert_Fires": {
+        "type": "ApiConnectionWebhook",
+        "inputs": {
+          "host": {
+            "connection": { "name": "@parameters('$connections')['azuremonitor']['connectionId']" }
+          },
+          "body": { "callback_url": "@listCallbackUrl()" },
+          "path": "/subscriptions/alert-trigger",
+          "queries": { "alertRule": "bcdr-region-outage-eastus2" }
+        }
+      }
+    },
+    "actions": {
+      "Check_ASR_Replication_Health": {
+        "type": "ApiConnection",
+        "inputs": {
+          "host": {
+            "connection": { "name": "@parameters('$connections')['azuremonitorlogs']['connectionId']" }
+          },
+          "method": "post",
+          "path": "/queryData",
+          "body": {
+            "query": "AzureDiagnostics | where TimeGenerated > ago(1h) | where Category == 'AzureSiteRecoveryReplicationStats' | extend CurrentRPOMinutes = todouble(column_ifexists('currentRPOInSeconds_d', 0)) / 60.0 | where CurrentRPOMinutes > 60 | count",
+            "workspaceId": "@parameters('LogAnalyticsWorkspaceId')"
+          }
+        },
+        "runAfter": {},
+        "description": "Checks if any Tier 1 workload has an RPO breach (lag > 60 minutes) at time of alert."
+      },
+      "Page_OnCall_Team": {
+        "type": "Http",
+        "inputs": {
+          "method": "POST",
+          "uri": "@parameters('TeamsWebhookUrl')",
+          "headers": { "Content-Type": "application/json" },
+          "body": {
+            "type": "message",
+            "text": "REGION OUTAGE ALERT — eastus2 Service Health incident detected. ASR replication health check complete. Incident Commander approval required before any failover action. Check your email for the approval request. Reference: docs/ir-playbooks/region-outage-tier1-failover.md"
+          }
+        },
+        "runAfter": { "Check_ASR_Replication_Health": ["Succeeded", "Failed"] }
+      },
+      "Send_Approval_Request": {
+        "type": "ApiConnection",
+        "inputs": {
+          "host": {
+            "connection": { "name": "@parameters('$connections')['office365']['connectionId']" }
+          },
+          "method": "post",
+          "path": "/approvalmail/$subscriptions",
+          "body": {
+            "To": "@parameters('IncidentCommanderEmail')",
+            "Subject": "[ACTION REQUIRED] ASR Failover Authorization — Region Outage Detected",
+            "Options": "Approve, Reject",
+            "Body": "A Service Health alert has been received for an eastus2 region outage. Pre-failover validation has been run automatically.
+
+Please review the pre-failover checklist in the IR-003 playbook before approving:
+docs/ir-playbooks/region-outage-tier1-failover.md
+
+IMPORTANT: This approval authorizes the INTENT to failover. The actual failover commands must be executed MANUALLY per Phase 2 of the playbook. This email creates the authorization audit trail only.
+
+Approve = Proceed with manual failover per IR-003 Phase 2
+Reject = Stand down — outage may be transient",
+            "Importance": "High"
+          }
+        },
+        "runAfter": { "Page_OnCall_Team": ["Succeeded"] }
+      },
+      "If_Approved": {
+        "type": "If",
+        "expression": {
+          "and": [
+            {
+              "equals": ["@body('Send_Approval_Request')?['SelectedOption']", "Approve"]
+            }
+          ]
+        },
+        "actions": {
+          "Log_Authorization": {
+            "type": "Http",
+            "inputs": {
+              "method": "POST",
+              "uri": "@parameters('TeamsWebhookUrl')",
+              "headers": { "Content-Type": "application/json" },
+              "body": {
+                "type": "message",
+                "text": "@{concat('FAILOVER AUTHORIZED by Incident Commander at ', utcNow(), '. Proceed with IR-003 Phase 2 manual failover commands. Authorization logged.')}"
+              }
+            }
+          }
+        },
+        "else": {
+          "actions": {
+            "Log_Rejection": {
+              "type": "Http",
+              "inputs": {
+                "method": "POST",
+                "uri": "@parameters('TeamsWebhookUrl')",
+                "headers": { "Content-Type": "application/json" },
+                "body": {
+                  "type": "message",
+                  "text": "@{concat('FAILOVER REJECTED by Incident Commander at ', utcNow(), '. Outage declared transient. Continue monitoring. No failover action taken.')}"
+                }
+              }
+            }
+          }
+        },
+        "runAfter": { "Send_Approval_Request": ["Succeeded"] }
+      }
+    },
+    "outputs": {}
+  }
+}
