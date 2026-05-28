@@ -1,0 +1,81 @@
+// asr-replication-health.kql
+// Monitors Azure Site Recovery (ASR) replication health for all protected Tier 1 workloads.
+// Surfaces replication lag, missed recovery points, and health state degradation.
+// Run in Log Analytics Workspace linked to Azure Monitor diagnostic settings.
+//
+// Required: Recovery Services Vault diagnostic settings forwarded to Log Analytics
+// Table: AzureDiagnostics (category: AzureSiteRecoveryReplicationStats)
+//
+// Reference: docs/ir-playbooks/region-outage-tier1-failover.md Step 1.1
+
+// ── Primary: Replication health and lag per protected VM ─────────────────
+AzureDiagnostics
+| where TimeGenerated > ago(1h)
+| where Category == "AzureSiteRecoveryReplicationStats"
+| extend
+    VMName                = tostring(column_ifexists("friendlyName_s", ResourceId)),
+    ReplicationHealth     = tostring(column_ifexists("replicationHealth_s", "")),
+    LastRecoveryPointTime = todatetime(column_ifexists("lastRpoCalculatedTime_t", "")),
+    CurrentRPOMinutes     = todouble(column_ifexists("currentRPOInSeconds_d", 0)) / 60.0,
+    ReplicationState      = tostring(column_ifexists("replicationState_s", ""))
+| project
+    TimeGenerated,
+    VMName,
+    ReplicationHealth,
+    ReplicationState,
+    LastRecoveryPointTime,
+    CurrentRPOMinutes,
+    ResourceId
+| order by CurrentRPOMinutes desc
+
+// ── Alert threshold ───────────────────────────────────────────────────────
+// Create a Scheduled Analytics Rule in Sentinel with:
+// Query frequency : 5 minutes
+// Lookup window   : 15 minutes
+// Alert condition : CurrentRPOMinutes > 60 (Tier 1 RPO target: 1 hour)
+// Severity        : High
+// Tactic          : Impact (potential data loss risk)
+
+// ── RPO Breach Predictor ─────────────────────────────────────────────────
+// Projects time-to-RPO-breach based on current replication lag trend.
+// Gives ops team early warning before a breach is confirmed.
+// Run as a companion query; review alongside the primary health query.
+//
+// AzureDiagnostics
+// | where TimeGenerated > ago(2h)
+// | where Category == "AzureSiteRecoveryReplicationStats"
+// | extend
+//     VMName            = tostring(column_ifexists("friendlyName_s", ResourceId)),
+//     CurrentRPOSeconds = todouble(column_ifexists("currentRPOInSeconds_d", 0))
+// | summarize
+//     AvgRPOSeconds = avg(CurrentRPOSeconds),
+//     MaxRPOSeconds = max(CurrentRPOSeconds),
+//     TrendSlope    = (max(CurrentRPOSeconds) - min(CurrentRPOSeconds)) / 7200.0
+//     by VMName
+// | extend
+//     RPOTargetSeconds    = 3600.0,
+//     MinutesToBreach     = iif(TrendSlope > 0,
+//         (RPOTargetSeconds - MaxRPOSeconds) / (TrendSlope * 60.0),
+//         real(null))
+// | where MinutesToBreach < 30 or MaxRPOSeconds > RPOTargetSeconds
+// | project VMName, AvgRPOSeconds, MaxRPOSeconds, TrendSlope, MinutesToBreach
+// | order by MinutesToBreach asc
+//
+// MinutesToBreach < 30 = early warning: page on-call
+// MinutesToBreach null or negative = already breached or stable
+
+// ── Replication health state change detection ────────────────────────────
+// Detects transitions from Healthy to Warning or Critical health state.
+// More useful for alerting than raw lag; avoids alert fatigue from transient spikes.
+//
+// AzureDiagnostics
+// | where TimeGenerated > ago(24h)
+// | where Category == "AzureSiteRecoveryReplicationStats"
+// | extend
+//     VMName            = tostring(column_ifexists("friendlyName_s", ResourceId)),
+//     ReplicationHealth = tostring(column_ifexists("replicationHealth_s", ""))
+// | summarize
+//     LatestHealth   = arg_max(TimeGenerated, ReplicationHealth) by VMName
+// | where ReplicationHealth in ("Warning", "Critical")
+// | project VMName, ReplicationHealth, TimeGenerated
+// | order by TimeGenerated desc
