@@ -1,0 +1,76 @@
+// soft-delete-timeline.kql
+// Calculates remaining soft-delete window for all deleted backup items.
+// This is the "burn rate" query — run IMMEDIATELY when a bulk deletion event is detected.
+// The 14-day soft-delete window begins at the moment of deletion. Knowing how much
+// time remains determines whether soft-delete recovery is viable or if you need to
+// escalate to an alternate recovery path.
+//
+// Required: Recovery Services Vault diagnostic settings forwarded to Log Analytics
+// Table: AzureDiagnostics (category: AzureBackupReport)
+// Reference: docs/ir-playbooks/accidental-bulk-deletion.md Phase 1, Step 1.1
+
+// ── Primary: Remaining soft-delete window per deleted item ───────────────
+AzureDiagnostics
+| where TimeGenerated > ago(15d)
+| where Category == "AzureBackupReport"
+| where OperationName == "DeleteBackupItem" and ResultType == "Succeeded"
+| extend
+    BackupItemName      = tostring(BackupItemUniqueId_s),
+    VaultName           = tostring(split(ResourceId, "/")[-1]),
+    DeletionTime        = TimeGenerated,
+    DaysElapsed         = round(datetime_diff('hour', now(), TimeGenerated) / 24.0, 1),
+    DaysRemaining       = round(14.0 - (datetime_diff('hour', now(), TimeGenerated) / 24.0), 1),
+    HoursRemaining      = round((14.0 * 24) - datetime_diff('hour', now(), TimeGenerated), 1)
+| where DaysRemaining >= 0
+| project
+    DeletionTime,
+    VaultName,
+    BackupItemName,
+    DaysElapsed,
+    DaysRemaining,
+    HoursRemaining,
+    Urgency = case(
+        DaysRemaining < 1,  "CRITICAL — less than 24 hours remaining",
+        DaysRemaining < 3,  "HIGH — less than 3 days remaining",
+        DaysRemaining < 7,  "MEDIUM — less than 7 days remaining",
+        "LOW — more than 7 days remaining"
+    )
+| order by DaysRemaining asc
+
+// ── Alert threshold ───────────────────────────────────────────────────────
+// Create a Scheduled Analytics Rule in Sentinel with:
+// Query frequency : 1 hour
+// Lookup window   : 15 days
+// Alert condition : DaysRemaining < 3 (less than 3 days of window remaining)
+// Severity        : High
+// This alert fires as a countdown warning — not at deletion time, but as the
+// window approaches expiry. This prevents silent expiry of recoverable items.
+
+// ── Companion: Who deleted what and when ─────────────────────────────────
+// Correlates the deletion event with the identity that performed it.
+// Use to determine if the deletion was accidental or malicious.
+//
+// AzureActivity
+// | where TimeGenerated > ago(15d)
+// | where ResourceProvider == "Microsoft.RecoveryServices"
+// | where OperationName contains "delete" or OperationName contains "Delete"
+// | where ActivityStatus == "Succeeded"
+// | extend
+//     CallerIdentity = tostring(Claims["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn"]),
+//     VaultName      = tostring(split(ResourceId, "/")[-1])
+// | project TimeGenerated, VaultName, OperationName, CallerIdentity, CallerIpAddress, ResourceId
+// | order by TimeGenerated desc
+
+// ── Companion: Items approaching permanent expiry (no recovery point possible) ──
+// Finds items where the soft-delete window has expired — permanent loss has occurred.
+// Used for post-incident impact assessment.
+//
+// AzureDiagnostics
+// | where TimeGenerated > ago(30d)
+// | where Category == "AzureBackupReport"
+// | where OperationName == "DeleteBackupItem" and ResultType == "Succeeded"
+// | extend DaysElapsed = datetime_diff('day', now(), TimeGenerated)
+// | where DaysElapsed > 14
+// | project TimeGenerated, BackupItemUniqueId_s, DaysElapsed,
+//     Status = "Permanently deleted — no recovery possible via soft-delete"
+// | order by TimeGenerated desc
