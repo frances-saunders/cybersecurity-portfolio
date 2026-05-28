@@ -1,0 +1,92 @@
+// backup-coverage-gaps.kql
+// Identifies in-scope workloads that are tagged for BCDR coverage but have no successful
+// backup job in the last 25 hours — the "ghost resource" detector.
+// This catches the specific failure mode where a policy assignment exists and enrollment
+// appears to have succeeded, but the backup agent never ran or silently failed.
+// Run in Log Analytics Workspace linked to Azure Monitor diagnostic settings.
+//
+// Required: Recovery Services Vault diagnostics (AddonAzureBackupJobs table)
+// Also required: Azure Resource Graph or Resource Tags forwarded to Log Analytics
+// Reference: docs/workload-classification.md Section 4 (Shadow Workloads)
+//            scripts/automation/backup-coverage-reporter.ps1
+
+// ── Primary: Ghost resource detection ────────────────────────────────────
+// Resources that have had a backup enrollment action but no successful job
+// in the last 25 hours. The 25h window gives a 1-hour buffer beyond the daily
+// backup schedule to account for backup windows and latency.
+let CoveredResources =
+    AddonAzureBackupJobs
+    | where TimeGenerated > ago(48h)
+    | where JobOperation == "Backup"
+    | summarize
+        LastSuccess   = maxif(TimeGenerated, JobStatus == "Completed"),
+        LastAttempt   = max(TimeGenerated),
+        FailureCount  = countif(JobStatus == "Failed"),
+        SuccessCount  = countif(JobStatus == "Completed")
+        by BackupItemFriendlyName, BackupManagementType, VaultName = tostring(split(ResourceId, "/")[-1])
+    | extend
+        HoursSinceLastSuccess = iif(isnull(LastSuccess), real(null), datetime_diff('hour', now(), LastSuccess)),
+        IsGhostResource       = isnull(LastSuccess) or LastSuccess < ago(25h)
+    | project
+        BackupItemFriendlyName,
+        BackupManagementType,
+        VaultName,
+        LastSuccess,
+        LastAttempt,
+        HoursSinceLastSuccess,
+        FailureCount,
+        SuccessCount,
+        IsGhostResource,
+        Diagnosis = case(
+            isnull(LastSuccess) and SuccessCount == 0, "CRITICAL — No successful backup ever recorded. Policy may have enrolled but agent never ran.",
+            LastSuccess < ago(25h) and FailureCount > 0, "HIGH — Last successful backup over 25h ago and recent failures detected.",
+            LastSuccess < ago(25h), "MEDIUM — Last successful backup over 25h ago. No recent failures but coverage gap exists.",
+            "OK — Backup coverage confirmed within last 25 hours."
+        )
+    | where IsGhostResource == true
+    | order by HoursSinceLastSuccess desc;
+CoveredResources
+
+// ── Alert threshold ───────────────────────────────────────────────────────
+// Create a Scheduled Analytics Rule in Sentinel with:
+// Query frequency : 1 hour
+// Lookup window   : 48 hours
+// Alert condition : IsGhostResource == true and count > 0
+// Severity        : High for Tier 1 resources, Medium for Tier 2/3
+// This is the automated complement to the monthly backup-coverage-reporter.ps1 audit.
+// It provides continuous detection between audit cycles.
+
+// ── Companion: Backup coverage summary dashboard ──────────────────────────
+// Overview of total coverage health across all vaults and management types.
+// Use as a dashboard tile in Sentinel Workbooks or Azure Monitor Workbooks.
+//
+// AddonAzureBackupJobs
+// | where TimeGenerated > ago(48h)
+// | where JobOperation == "Backup"
+// | summarize
+//     LastSuccess  = maxif(TimeGenerated, JobStatus == "Completed"),
+//     LastAttempt  = max(TimeGenerated),
+//     FailureCount = countif(JobStatus == "Failed")
+//     by BackupItemFriendlyName, BackupManagementType
+// | extend CoverageStatus = iif(LastSuccess > ago(25h), "Protected", "Gap Detected")
+// | summarize
+//     TotalResources   = count(),
+//     ProtectedCount   = countif(CoverageStatus == "Protected"),
+//     GapCount         = countif(CoverageStatus == "Gap Detected"),
+//     CoveragePercent  = round(100.0 * countif(CoverageStatus == "Protected") / count(), 1)
+//     by BackupManagementType
+// | order by GapCount desc
+
+// ── Companion: Backup policy assignment vs active protection divergence ───
+// Detects resources that have been enrolled (policy assigned) but where the
+// most recent backup job status is not "Completed" — indicating the policy is
+// assigned but protection is not operational. This is distinct from a ghost
+// resource (which has no job history at all).
+//
+// AddonAzureBackupJobs
+// | where TimeGenerated > ago(24h)
+// | where JobOperation == "Backup"
+// | summarize LastStatus = arg_max(TimeGenerated, JobStatus) by BackupItemFriendlyName
+// | where JobStatus != "Completed"
+// | project BackupItemFriendlyName, JobStatus, TimeGenerated
+// | order by TimeGenerated desc
