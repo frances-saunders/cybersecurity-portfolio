@@ -1,0 +1,80 @@
+// vault-tamper-detection.kql
+// Detects attempts to weaken backup vault protection — the leading precursor to ransomware-driven
+// backup destruction. Monitors soft-delete disablement, immutability override attempts,
+// vault deletion, and anomalous backup API calls from unexpected identities.
+// Run in Log Analytics Workspace linked to Azure Monitor diagnostic settings.
+//
+// Required: Azure Activity Log + Recovery Services Vault diagnostics forwarded to Log Analytics
+// Reference: docs/ir-playbooks/ransomware-encryption-event.md Step 1.3
+//            automation/playbooks/notify-on-backup-failure.jsonc
+
+// ── Primary: Vault protection weakening attempts ─────────────────────────
+AzureActivity
+| where TimeGenerated > ago(24h)
+| where ResourceProvider == "Microsoft.RecoveryServices"
+| where OperationName in (
+    "Microsoft.RecoveryServices/vaults/backupconfig/write",
+    "Microsoft.RecoveryServices/vaults/delete",
+    "Microsoft.RecoveryServices/vaults/backupPolicies/delete",
+    "Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers/protectedItems/delete"
+)
+| extend
+    CallerIdentity = tostring(Claims["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn"]),
+    OperationType  = tostring(OperationName),
+    VaultName      = tostring(split(ResourceId, "/")[-1])
+| where ActivityStatus == "Succeeded" or ActivityStatus == "Started"
+| project
+    TimeGenerated,
+    VaultName,
+    OperationType,
+    CallerIdentity,
+    CallerIpAddress,
+    ActivityStatus,
+    ResourceId
+| order by TimeGenerated desc
+
+// ── Alert threshold ───────────────────────────────────────────────────────
+// Create a Scheduled Analytics Rule in Sentinel with:
+// Query frequency : 5 minutes
+// Lookup window   : 15 minutes
+// Alert threshold : results > 0 (any match is a High severity alert)
+// Severity        : High
+// Tactic          : Impact (T1485 — Data Destruction)
+// Auto-assign     : to on-call analyst
+// Reference playbook: IR-001 (ransomware), IR-004 (credential compromise)
+
+// ── Soft-delete disable attempt detection ────────────────────────────────
+// Specifically targets attempts to disable soft-delete on a vault.
+// Soft-delete disablement is the first step in ransomware backup destruction chains.
+// Even a failed attempt should be treated as a high-confidence ransomware precursor.
+//
+// AzureActivity
+// | where TimeGenerated > ago(24h)
+// | where ResourceProvider == "Microsoft.RecoveryServices"
+// | where OperationName == "Microsoft.RecoveryServices/vaults/backupconfig/write"
+// | extend
+//     SoftDeleteState = tostring(parse_json(Properties).softDeleteFeatureState),
+//     CallerIdentity  = tostring(Claims["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn"])
+// | where SoftDeleteState =~ "Disabled"
+// | project TimeGenerated, CallerIdentity, CallerIpAddress, SoftDeleteState, ResourceId
+// | order by TimeGenerated desc
+
+// ── Anomalous backup API calls by unexpected identity ────────────────────
+// Detects service principals or user accounts accessing the backup API
+// outside of their expected operational pattern (off-hours, new IP, unexpected scope).
+// Tune the authorized_callers list to your environment.
+//
+// let authorized_callers = dynamic(["backup-automation-sp@company.com", "soc-automation@company.com"]);
+// AzureActivity
+// | where TimeGenerated > ago(24h)
+// | where ResourceProvider == "Microsoft.RecoveryServices"
+// | extend CallerIdentity = tostring(Claims["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn"])
+// | where CallerIdentity !in (authorized_callers)
+// | where OperationName contains "backup" or OperationName contains "protectedItems"
+// | summarize
+//     CallCount = count(),
+//     Operations = make_set(OperationName),
+//     IPs = make_set(CallerIpAddress)
+//     by CallerIdentity, bin(TimeGenerated, 1h)
+// | where CallCount > 5
+// | order by CallCount desc
