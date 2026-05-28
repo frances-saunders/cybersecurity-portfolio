@@ -1,0 +1,156 @@
+{
+  // notify-on-backup-failure.jsonc
+  // Azure Logic App playbook — triggers on Azure Monitor backup failure alert,
+  // creates a Microsoft Sentinel incident, and sends a Teams + email notification
+  // to the on-call analyst.
+  //
+  // Trigger: Azure Monitor alert rule "bcdr-backup-job-failure"
+  // Permissions required: Logic App managed identity needs:
+  //   - Microsoft Sentinel Responder (to create incidents)
+  //   - Monitoring Reader (to read alert details)
+  // Deploy via: az logic workflow create or ARM template import in Azure portal
+  //
+  // Reference: kql/backup-job-failures.kql (alert source)
+  //            docs/ir-playbooks/ransomware-encryption-event.md (escalation path)
+
+  "$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json",
+  "contentVersion": "1.0.0.0",
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "TeamsWebhookUrl": {
+        "type": "securestring",
+        "metadata": { "description": "Incoming Webhook URL for the SOC Teams channel. Store in Key Vault; reference via managed identity." }
+      },
+      "AlertEmailAddress": {
+        "type": "string",
+        "defaultValue": "soc@company.com",
+        "metadata": { "description": "On-call analyst email address for backup failure notifications." }
+      },
+      "SentinelWorkspaceId": {
+        "type": "string",
+        "metadata": { "description": "Log Analytics Workspace ID linked to Microsoft Sentinel." }
+      }
+    },
+    "triggers": {
+      "When_an_Azure_Monitor_alert_fires": {
+        "type": "ApiConnectionWebhook",
+        "inputs": {
+          "host": {
+            "connection": { "name": "@parameters('$connections')['azuremonitor']['connectionId']" }
+          },
+          "body": {
+            "callback_url": "@listCallbackUrl()"
+          },
+          "path": "/subscriptions/@{encodeURIComponent(triggerBody()?['data']?['essentials']?['alertId'])}/providers/microsoft.alertsmanagement/alerts",
+          "method": "POST"
+        }
+      }
+    },
+    "actions": {
+      "Parse_Alert_Schema": {
+        "type": "ParseJson",
+        "inputs": {
+          "content": "@triggerBody()",
+          "schema": {
+            "properties": {
+              "data": {
+                "properties": {
+                  "essentials": {
+                    "properties": {
+                      "alertRule": { "type": "string" },
+                      "severity": { "type": "string" },
+                      "signalType": { "type": "string" },
+                      "firedDateTime": { "type": "string" },
+                      "description": { "type": "string" }
+                    }
+                  },
+                  "alertContext": {
+                    "properties": {
+                      "AffectedConfigurationItems": { "type": "array" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "runAfter": {}
+      },
+      "Determine_Severity": {
+        "type": "If",
+        "expression": {
+          "and": [
+            {
+              "contains": [
+                "@body('Parse_Alert_Schema')?['data']?['essentials']?['alertRule']",
+                "tier1"
+              ]
+            }
+          ]
+        },
+        "actions": {
+          "Set_Severity_High": {
+            "type": "SetVariable",
+            "inputs": { "name": "IncidentSeverity", "value": "High" }
+          }
+        },
+        "else": {
+          "actions": {
+            "Set_Severity_Medium": {
+              "type": "SetVariable",
+              "inputs": { "name": "IncidentSeverity", "value": "Medium" }
+            }
+          }
+        },
+        "runAfter": { "Parse_Alert_Schema": ["Succeeded"] }
+      },
+      "Send_Teams_Notification": {
+        "type": "Http",
+        "inputs": {
+          "method": "POST",
+          "uri": "@parameters('TeamsWebhookUrl')",
+          "headers": { "Content-Type": "application/json" },
+          "body": {
+            "@{json(concat(
+              '{"type":"message","attachments":[{"contentType":"application/vnd.microsoft.card.adaptive","content":{"type":"AdaptiveCard","version":"1.4","body":[',
+              '{"type":"TextBlock","text":"BCDR ALERT: Backup Job Failure","weight":"Bolder","size":"Large","color":"Attention"},',
+              '{"type":"TextBlock","text":"Severity: ', variables('IncidentSeverity'), '","wrap":true},',
+              '{"type":"TextBlock","text":"Alert: ', body('Parse_Alert_Schema')?['data']?['essentials']?['alertRule'], '","wrap":true},',
+              '{"type":"TextBlock","text":"Time: ', body('Parse_Alert_Schema')?['data']?['essentials']?['firedDateTime'], '","wrap":true},',
+              '{"type":"TextBlock","text":"Action required: Review in Sentinel and initiate IR-001 if vault tampering is suspected.","wrap":true}',
+              ']}}}]}'
+            ))}"
+          }
+        },
+        "runAfter": { "Determine_Severity": ["Succeeded"] }
+      },
+      "Send_Email_Notification": {
+        "type": "ApiConnection",
+        "inputs": {
+          "host": {
+            "connection": { "name": "@parameters('$connections')['office365']['connectionId']" }
+          },
+          "method": "post",
+          "path": "/v2/Mail",
+          "body": {
+            "To": "@parameters('AlertEmailAddress')",
+            "Subject": "@{concat('[BCDR ALERT] Backup Job Failure — ', body('Parse_Alert_Schema')?['data']?['essentials']?['alertRule'])}",
+            "Body": "@{concat('<b>Backup job failure detected.</b><br><br>Alert Rule: ', body('Parse_Alert_Schema')?['data']?['essentials']?['alertRule'], '<br>Severity: ', variables('IncidentSeverity'), '<br>Time: ', body('Parse_Alert_Schema')?['data']?['essentials']?['firedDateTime'], '<br><br>Action: Review in Microsoft Sentinel. If vault tamper attempts are also present, initiate IR-001 (ransomware playbook) immediately.<br><br>Reference: docs/ir-playbooks/ransomware-encryption-event.md')}",
+            "Importance": "High"
+          }
+        },
+        "runAfter": { "Send_Teams_Notification": ["Succeeded"] }
+      }
+    },
+    "variables": [
+      {
+        "name": "IncidentSeverity",
+        "type": "string",
+        "value": "Medium"
+      }
+    ],
+    "outputs": {}
+  }
+}
